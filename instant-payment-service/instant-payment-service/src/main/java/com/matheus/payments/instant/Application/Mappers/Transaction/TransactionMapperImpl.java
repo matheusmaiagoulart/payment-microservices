@@ -2,7 +2,7 @@ package com.matheus.payments.instant.Application.Mappers.Transaction;
 
 import com.matheus.payments.instant.Application.DTOs.TransactionDTO;
 import com.matheus.payments.instant.Application.DTOs.TransactionRequest;
-import com.matheus.payments.instant.Domain.transaction.Transaction;
+import com.matheus.payments.instant.Domain.Transaction.Transaction;
 import org.springframework.stereotype.Component;
 
 @Component

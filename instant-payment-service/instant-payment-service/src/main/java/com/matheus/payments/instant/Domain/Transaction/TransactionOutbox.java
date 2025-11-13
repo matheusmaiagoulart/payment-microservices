@@ -1,4 +1,4 @@
-package com.matheus.payments.instant.Domain.transaction;
+package com.matheus.payments.instant.Domain.Transaction;
 
 import lombok.Getter;
 import lombok.Setter;
