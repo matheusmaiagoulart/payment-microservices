@@ -1,0 +1,2 @@
+ALTER TABLE wallets
+ALTER COLUMN account_type VARCHAR(50);
