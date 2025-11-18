@@ -16,7 +16,7 @@ public class TransactionMapperImpl implements TransactionMapper {
                 transaction.getSenderId(),
                 transaction.getReceiverId(),
                 transaction.getAmount(),
-                transaction.getProcessed(),
+                transaction.getStatus(),
                 transaction.getTimestamp()
         );
     }
