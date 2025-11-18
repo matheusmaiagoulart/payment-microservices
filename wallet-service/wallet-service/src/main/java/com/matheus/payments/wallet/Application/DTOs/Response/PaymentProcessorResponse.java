@@ -14,7 +14,7 @@ public class PaymentProcessorResponse {
     private String failedMessage;
 
     public PaymentProcessorResponse(UUID transactionId, Boolean isSucessful, Boolean isFailed, String failedMessage) {
-        TransactionId = transactionId;
+        this.TransactionId = transactionId;
         this.isSucessful = isSucessful;
         this.isFailed = isFailed;
         this.failedMessage = failedMessage;
