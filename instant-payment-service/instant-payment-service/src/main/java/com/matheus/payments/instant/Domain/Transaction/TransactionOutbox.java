@@ -12,10 +12,8 @@ import java.time.LocalDateTime;
 @Document(collection = "transaction_outbox")
 public class TransactionOutbox {
 
-
     @Id
     private String transactionId;
-    private String topic;
     private String payload;
     private Boolean sent;
     private Boolean failed;
@@ -23,9 +21,8 @@ public class TransactionOutbox {
     private String failureReason;
     private LocalDateTime failureAt;
 
-    public TransactionOutbox(String transactionId, String topic, String payload) {
+    public TransactionOutbox(String transactionId, String payload) {
         this.transactionId = transactionId;
-        this.topic = topic;
         this.payload = payload;
         this.sent = false;
         this.failed = false;
@@ -33,6 +30,4 @@ public class TransactionOutbox {
         this.failureReason = null;
         this.failureAt = null;
     }
-
-
 }
