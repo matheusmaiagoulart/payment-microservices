@@ -1,4 +1,4 @@
-package com.matheus.payments.instant.Application.DTOs;
+package com.matheus.payments.instant.Application.DTOs.Request;
 
 import lombok.Getter;
 
