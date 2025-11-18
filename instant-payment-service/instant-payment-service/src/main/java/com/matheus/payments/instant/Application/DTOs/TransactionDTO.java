@@ -1,5 +1,6 @@
 package com.matheus.payments.instant.Application.DTOs;
 
+import com.matheus.payments.instant.Domain.Transaction.TransactionStatus;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -13,15 +14,15 @@ public class TransactionDTO {
     private String senderId;
     private String receiverId;
     private BigDecimal amount;
-    private Boolean processed;
+    private TransactionStatus status;
     private LocalDateTime timestamp;
 
-    public TransactionDTO(UUID transactionId, UUID senderId, UUID receiverId, BigDecimal amount, Boolean processed, LocalDateTime timestamp) {
+    public TransactionDTO(UUID transactionId, UUID senderId, UUID receiverId, BigDecimal amount, TransactionStatus status, LocalDateTime timestamp) {
         this.transactionId = transactionId.toString();
         this.senderId = senderId.toString();
         this.receiverId = receiverId.toString();
         this.amount = amount;
-        this.processed = processed;
+        this.status = status;
         this.timestamp = timestamp;
     }
 
