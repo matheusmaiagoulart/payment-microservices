@@ -1,13 +1,18 @@
 package com.matheus.payments.instant.Controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Application.DTOs.TransactionRequest;
 import com.matheus.payments.instant.Application.Services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/transaction")
@@ -17,18 +22,12 @@ public class TransactionController {
     private PaymentService paymentService;
 
     @PostMapping("/pix")
-    public String teste(@RequestBody TransactionRequest request) throws JsonProcessingException {
+    public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@RequestBody TransactionRequest request) throws IOException, InterruptedException {
 
-        String result = paymentService.processPayment(request);
-        if(result != null){
-            System.out.println("Enviando para o processador de pagamentos: " + result);
-            var result2 = paymentService.sendPaymentToProcessor(result);
-            if(result2){
-                return "Payment sended to processor sucessfully";
-            }
-            return "Error sending payment to processor";
-        }
+        PaymentProcessorResponse paymentOrchestration = paymentService.paymentOrchestration(request);
 
-        return "Error processing payment";
+            return ResponseEntity.ok(paymentOrchestration);
+
     }
+
 }
