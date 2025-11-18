@@ -1,10 +1,12 @@
 package com.matheus.payments.wallet.Application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
 import com.matheus.payments.wallet.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.wallet.Domain.Wallet.Wallet;
 import com.matheus.payments.wallet.Domain.Wallet.accountType;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.InsuficientBalanceException;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.SameUserException;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.WalletNotFoundException;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,9 @@ import java.util.UUID;
 public class WalletService {
 
     private WalletRepository walletRepository;
-    private ObjectMapper objectMapper;
 
-    public WalletService(WalletRepository walletRepository, ObjectMapper objectMapper) {
+    public WalletService(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
-        this.objectMapper = objectMapper;
     }
 
 
@@ -35,7 +35,7 @@ public class WalletService {
     }
 
     @Transactional
-    protected PaymentProcessorResponse handlePaymentProcessor(TransactionDTO request){
+    public PaymentProcessorResponse handlePaymentProcessor(TransactionDTO request){
 
         var payloadResponse = new PaymentProcessorResponse(
                 request.getTransactionId(),
@@ -48,18 +48,18 @@ public class WalletService {
 
             // Same user validation
             if (request.getSenderId().equals(request.getReceiverId())) {
-                throw new RuntimeException("Sender and receiver cannot be the same");
+                throw new SameUserException("Sender and receiver cannot be the same");
             }
 
             Wallet senderWallet = walletRepository.findByUserIdAndIsActiveTrue(request.getSenderId())
-                    .orElseThrow(() -> new RuntimeException("Sender wallet not found or inactive"));
+                    .orElseThrow(() -> new WalletNotFoundException("Sender wallet not found or inactive"));
 
             // Sufficient balance validation (-1 (invalid), 0 (equal), 1 (sufficient))
             if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
-                throw new RuntimeException("Insufficient funds in sender's wallet");
+                throw new InsuficientBalanceException("Insufficient funds in sender's wallet");
             }
             Wallet receiverWallet = walletRepository.findByUserIdAndIsActiveTrue(request.getReceiverId())
-                    .orElseThrow(() -> new RuntimeException("Receiver wallet not found or inactive"));
+                    .orElseThrow(() -> new WalletNotFoundException("Receiver wallet not found or inactive"));
 
             BigDecimal amount = request.getAmount();
 
