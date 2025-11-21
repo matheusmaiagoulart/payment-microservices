@@ -24,5 +24,13 @@ Thumbs.db
 # Environment
 .env
 
+# Certificates and Keystores
+*.p12
+*.jks
+*.crt
+*.pem
+*.key
+**/Certifications/
+
 # Others
 *.swp
