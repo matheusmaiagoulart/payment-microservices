@@ -51,7 +51,6 @@ public class PaymentService {
     }
 
 
-
     public PaymentProcessorResponse paymentOrchestration(TransactionRequest request) throws IOException, InterruptedException {
 
         String transactionId = createPaymentProcess(request);
@@ -95,23 +94,25 @@ public class PaymentService {
 
         String jsonPayload = outbox.getPayload();
         HttpResponse<String> response;
-        try{
+        try {
             response = walletServerRequest.instantPaymentRequest(jsonPayload);
+            if (response.statusCode() == 404) {
+                throw new FailedToSentException("Error 404: Wallet Server endpoint not found. The payment could not be processed.");
+            }
         } catch (IOException | InterruptedException e) {
 
-            System.out.println("Error sending payment to processAn error occurred while trying to reach Wallet Server. The payment could not be processed: " + e.getMessage());
-             PaymentProcessorResponse failedResponse = new PaymentProcessorResponse(
-                    UUID.fromString(transactionId),
-                    false,
-                    false,
-                    true,
-                     ("An error occurred." + e.getMessage())
-            );
+            System.out.println("Error sending payment to processan error occurred while trying to reach Wallet Server. The payment could not be processed: " + e.getMessage());
+            PaymentProcessorResponse failedResponse = new PaymentProcessorResponse();
+            failedResponse.setTransactionId(UUID.fromString(transactionId));
+            failedResponse.setIsSent(false);
+            failedResponse.setIsSucessful(false);
+            failedResponse.setIsFailed(true);
+            failedResponse.setFailedMessage("An error occurred." + e.getMessage());
+
             String failedResponseJson = objectMapper.writeValueAsString(failedResponse);
             paymentStatusUpdate(failedResponseJson);
 
             throw new FailedToSentException("Error sending payment to processAn error occurred while trying to reach Wallet Server. The payment could not be processed.");
-
         }
 
         outbox.setSent(true);
@@ -144,7 +145,7 @@ public class PaymentService {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionRepository.save(transaction);
 
-           throw new TransactionFailedException(response.getFailedMessage());
+            throw new TransactionFailedException(response.getFailedMessage());
         }
         transaction.setStatus(TransactionStatus.COMPLETED);
         transactionRepository.save(transaction);
