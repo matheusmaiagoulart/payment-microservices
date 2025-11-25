@@ -1,6 +1,7 @@
 package com.matheus.payments.wallet.Application.DTOs.Request;
 
 import com.matheus.payments.wallet.Domain.Wallet.accountType;
+import com.matheus.payments.wallet.Domain.Wallet.keyType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotEmpty;
@@ -17,7 +18,12 @@ public class CreateWalletRequest {
 
     @NotNull
     @NotEmpty
-    public UUID userId;
+    public String keyValue;
+
+    @NotNull
+    @NotEmpty
+    public keyType keyType;
+
     @NotNull
     @NotEmpty
     @Enumerated(EnumType.STRING)
