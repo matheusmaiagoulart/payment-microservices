@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,17 +19,21 @@ public class Transaction {
     @Id
     private UUID transactionId;
 
-    private UUID senderId;
-    private UUID receiverId;
+    private String senderKey;
+    private String receiverKey;
+
+    private UUID senderAccountId;
+    private UUID receiverAccountId;
+
     private BigDecimal amount;
     private TransactionStatus status;
     private LocalDateTime timestamp;
 
-    public Transaction(UUID senderId, UUID receiverId, BigDecimal amount)
+    public Transaction(String senderKey, String receiverKey, BigDecimal amount)
     {
         this.transactionId = UUID.randomUUID();
-        this.receiverId = receiverId;
-        this.senderId = senderId;
+        this.receiverKey = receiverKey;
+        this.senderKey = senderKey;
         this.amount = amount;
         this.timestamp = LocalDateTime.now();
         this.status = TransactionStatus.PENDING;
