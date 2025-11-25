@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,9 +24,8 @@ public class Wallet {
     private Boolean isActive;
     private LocalDateTime createdAt;
 
-    public Wallet(UUID userId, accountType accountType) {
+    public Wallet(accountType accountType) {
         this.accountId = UUID.randomUUID();
-        this.userId = userId;
         this.balance = BigDecimal.ZERO;
         this.accountType = accountType;
         this.isActive = true;
