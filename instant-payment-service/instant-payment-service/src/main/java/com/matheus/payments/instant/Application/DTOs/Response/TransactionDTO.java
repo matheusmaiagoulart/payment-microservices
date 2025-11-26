@@ -11,16 +11,20 @@ import java.util.UUID;
 public class TransactionDTO {
 
     private String transactionId;
-    private String senderId;
-    private String receiverId;
+    private String senderKey;
+    private String receiverKey;
+    private UUID senderAccountId;
+    private UUID receiverAccountId;
     private BigDecimal amount;
     private TransactionStatus status;
     private LocalDateTime timestamp;
 
-    public TransactionDTO(UUID transactionId, UUID senderId, UUID receiverId, BigDecimal amount, TransactionStatus status, LocalDateTime timestamp) {
+    public TransactionDTO(UUID transactionId, String senderKey, String receiverKey,UUID senderAccountId, UUID receiverAccountId, BigDecimal amount, TransactionStatus status, LocalDateTime timestamp) {
         this.transactionId = transactionId.toString();
-        this.senderId = senderId.toString();
-        this.receiverId = receiverId.toString();
+        this.senderKey = senderKey;
+        this.receiverKey = receiverKey;
+        this.senderAccountId = senderAccountId;
+        this.receiverAccountId = receiverAccountId;
         this.amount = amount;
         this.status = status;
         this.timestamp = timestamp;
