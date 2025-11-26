@@ -11,7 +11,7 @@ public class PaymentProcessorResponse {
     private UUID senderAccountId;
     private UUID receiverAccountId;
     private Boolean isSent;
-    private Boolean isSucessful;
+    private Boolean isSuccessful;
     private Boolean isFailed;
     private String failedMessage;
 
@@ -24,7 +24,7 @@ public class PaymentProcessorResponse {
         response.transactionId = transactionId;
         response.isSent = true;
         response.isFailed = true;
-        response.isSucessful = false;
+        response.isSuccessful = false;
         response.senderAccountId = senderAccountId;
         response.receiverAccountId = receiverAccountId;
         response.failedMessage = failedMessage;
@@ -37,7 +37,7 @@ public class PaymentProcessorResponse {
         response.transactionId = transactionId;
         response.isSent = true;
         response.isFailed = false;
-        response.isSucessful = true;
+        response.isSuccessful = true;
         response.senderAccountId = senderAccountId;
         response.receiverAccountId = receiverAccountId;
         response.failedMessage = null;
@@ -50,7 +50,7 @@ public class PaymentProcessorResponse {
         response.transactionId = transactionId;
         response.isSent = true;
         response.isFailed = true;
-        response.isSucessful = false;
+        response.isSuccessful = false;
         response.senderAccountId = null;
         response.receiverAccountId = null;
         response.failedMessage = "Error sending payment to processor occurred while trying to reach Wallet Server. The payment could not be processed!";
