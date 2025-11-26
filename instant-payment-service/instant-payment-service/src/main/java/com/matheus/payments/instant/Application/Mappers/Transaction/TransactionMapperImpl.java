@@ -13,8 +13,10 @@ public class TransactionMapperImpl implements TransactionMapper {
     public TransactionDTO mapToDTO(Transaction transaction) {
         return new TransactionDTO(
                 transaction.getTransactionId(),
-                transaction.getSenderId(),
-                transaction.getReceiverId(),
+                transaction.getSenderKey(),
+                transaction.getReceiverKey(),
+                transaction.getSenderAccountId(),
+                transaction.getReceiverAccountId(),
                 transaction.getAmount(),
                 transaction.getStatus(),
                 transaction.getTimestamp()
@@ -25,8 +27,8 @@ public class TransactionMapperImpl implements TransactionMapper {
     @Override
     public Transaction mapToEntity(TransactionRequest transactionRequest) {
         return new Transaction(
-                transactionRequest.getSenderId(),
-                transactionRequest.getReceiverId(),
+                transactionRequest.getSenderKey(),
+                transactionRequest.getReceiverKey(),
                 transactionRequest.getAmount()
         );
     }
