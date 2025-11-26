@@ -67,7 +67,7 @@ public class PaymentProcessorService {
 
         Transaction transaction = transactionRepository.findByTransactionId(response.getTransactionId()).orElseThrow(() -> new TransactionNotFound("Transaction with ID " + response.getTransactionId() + " not found."));
 
-        if (!response.getIsSucessful()) {
+        if (!response.getIsSuccessful()) {
             TransactionOutbox outbox = outboxRepository.findByTransactionId(response.getTransactionId().toString()).orElseThrow(() -> new TransactionNotFound("Outbox entry for Transaction ID " + response.getTransactionId() + " not found."));
 
             outbox.setFailed(true);
