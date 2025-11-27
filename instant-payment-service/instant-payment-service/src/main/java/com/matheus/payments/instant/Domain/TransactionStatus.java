@@ -1,4 +1,4 @@
-package com.matheus.payments.instant.Domain.Transaction;
+package com.matheus.payments.instant.Domain;
 
 public enum TransactionStatus {
     PENDING,
