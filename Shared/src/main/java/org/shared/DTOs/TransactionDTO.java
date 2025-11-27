@@ -12,9 +12,21 @@ public class TransactionDTO {
     private UUID senderAccountId;
     private UUID receiverAccountId;
     private BigDecimal amount;
+    private String status;
     private LocalDateTime timestamp;
 
     public TransactionDTO() {}
+
+        public TransactionDTO(UUID transactionId, String senderKey, String receiverKey,UUID senderAccountId, UUID receiverAccountId, BigDecimal amount, String status, LocalDateTime timestamp) {
+        this.transactionId = transactionId.toString();
+        this.senderKey = senderKey;
+        this.receiverKey = receiverKey;
+        this.senderAccountId = senderAccountId;
+        this.receiverAccountId = receiverAccountId;
+        this.amount = amount;
+        this.status = status;
+        this.timestamp = timestamp;
+    }
 
     public String getTransactionId() {
         return transactionId;
@@ -42,5 +54,8 @@ public class TransactionDTO {
 
     public LocalDateTime getTimestamp() {
         return timestamp;
+    }
+    public String getStatus() {
+        return status;
     }
 }
