@@ -1,6 +1,6 @@
 package com.matheus.payments.instant.Application.DTOs.Response;
 
-import com.matheus.payments.instant.Domain.Transaction.TransactionStatus;
+import com.matheus.payments.instant.Domain.TransactionStatus;
 import lombok.Getter;
 
 import java.math.BigDecimal;

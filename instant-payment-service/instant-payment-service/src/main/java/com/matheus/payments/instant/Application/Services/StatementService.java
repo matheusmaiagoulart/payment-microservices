@@ -1,7 +1,6 @@
 package com.matheus.payments.instant.Application.Services;
 
-import com.matheus.payments.instant.Application.DTOs.Response.TransactionDTO;
-import com.matheus.payments.instant.Domain.Transaction.Transaction;
+import com.matheus.payments.instant.Domain.Transaction;
 import com.matheus.payments.instant.Infra.Repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 

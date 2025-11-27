@@ -3,9 +3,9 @@ package com.matheus.payments.instant.Application.Services.InstantPaymentServices
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
-import com.matheus.payments.instant.Application.Mappers.Transaction.TransactionMapper;
-import com.matheus.payments.instant.Domain.Transaction.Transaction;
-import com.matheus.payments.instant.Domain.Transaction.TransactionOutbox;
+import com.matheus.payments.instant.Application.Mappers.TransactionMapper;
+import com.matheus.payments.instant.Domain.Transaction;
+import com.matheus.payments.instant.Domain.TransactionOutbox;
 import com.matheus.payments.instant.Infra.Repository.OutboxRepository;
 import com.matheus.payments.instant.Infra.Repository.TransactionRepository;
 import org.springframework.stereotype.Service;

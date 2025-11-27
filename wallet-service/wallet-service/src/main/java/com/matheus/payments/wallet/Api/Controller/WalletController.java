@@ -2,6 +2,7 @@ package com.matheus.payments.wallet.Api.Controller;
 
 import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
 import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
+import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.wallet.Application.PaymentProcessorService;
 import com.matheus.payments.wallet.Application.WalletService;

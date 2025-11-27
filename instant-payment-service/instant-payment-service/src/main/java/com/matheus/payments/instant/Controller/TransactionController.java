@@ -4,7 +4,7 @@ import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorRe
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
 import com.matheus.payments.instant.Application.Services.InstantPaymentServices.PaymentService;
 import com.matheus.payments.instant.Application.Services.StatementService;
-import com.matheus.payments.instant.Domain.Transaction.Transaction;
+import com.matheus.payments.instant.Domain.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -5,7 +5,7 @@ import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Domain.Wallet.Wallet;
 import com.matheus.payments.wallet.Domain.Wallet.WalletKeys;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.InsuficientBalanceException;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.InsufficientBalanceException;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.KeyValueAlreadyExists;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.SameUserException;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.WalletNotFoundException;
@@ -75,7 +75,7 @@ public class WalletService {
 
             // Sufficient balance validation (-1 (invalid), 0 (equal), 1 (sufficient))
             if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
-                throw new InsuficientBalanceException("Insufficient funds in sender's wallet");
+                throw new InsufficientBalanceException("Insufficient funds in sender's wallet");
             }
 
             BigDecimal amount = request.getAmount();
@@ -92,7 +92,7 @@ public class WalletService {
                         new InstantPaymentResponse(false, null, null, e.getMessage());
                 case SameUserException sameUserException ->
                         new InstantPaymentResponse(false, null, null, e.getMessage());
-                case InsuficientBalanceException insuficientBalanceException ->
+                case InsufficientBalanceException insuficientBalanceException ->
                         new InstantPaymentResponse(false, senderWallet.getAccountId(), null, e.getMessage());
                 default ->
                         new InstantPaymentResponse(false, senderWallet.getAccountId(), receiverWallet.getAccountId(), "Transaction failed during processing: " + e.getMessage());

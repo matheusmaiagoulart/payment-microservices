@@ -1,6 +1,6 @@
 package com.matheus.payments.instant.Infra.Repository;
 
-import com.matheus.payments.instant.Domain.Transaction.Transaction;
+import com.matheus.payments.instant.Domain.Transaction;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
