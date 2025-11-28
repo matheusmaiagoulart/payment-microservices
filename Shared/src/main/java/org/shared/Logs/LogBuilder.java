@@ -1,5 +1,7 @@
 package org.shared.Logs;
 
+import java.util.Arrays;
+
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 public class LogBuilder {
@@ -23,7 +25,7 @@ public class LogBuilder {
                 kv("transactionId", transactionId),
                 kv("class", className),
                 kv("method", methodName),
-                additionalKVs
+                kv("additional_info", Arrays.toString(additionalKVs))
         };
     }
 }
