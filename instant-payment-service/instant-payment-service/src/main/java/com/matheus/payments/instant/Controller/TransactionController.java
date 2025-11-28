@@ -2,10 +2,9 @@ package com.matheus.payments.instant.Controller;
 
 import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
-import com.matheus.payments.instant.Application.Services.InstantPaymentServices.PaymentService;
+import com.matheus.payments.instant.Application.Facades.InstantPaymentFacade;
 import com.matheus.payments.instant.Application.Services.StatementService;
 import com.matheus.payments.instant.Domain.Transaction;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,21 +16,24 @@ import java.util.UUID;
 @RequestMapping("/transaction")
 public class TransactionController {
 
-    @Autowired
-    private PaymentService paymentService;
-    @Autowired
-    private StatementService statementService;
+
+    private final InstantPaymentFacade paymentService;
+    private final StatementService statementService;
+
+    public TransactionController(InstantPaymentFacade paymentService, StatementService statementService) {
+        this.paymentService = paymentService;
+        this.statementService = statementService;
+    }
 
     @PostMapping("/pix")
-    public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@RequestBody TransactionRequest request) throws IOException, InterruptedException {
+    public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@RequestBody TransactionRequest request) throws IOException {
 
         PaymentProcessorResponse paymentOrchestration = paymentService.paymentOrchestration(request);
-
-            return ResponseEntity.ok(paymentOrchestration);
+        return ResponseEntity.ok(paymentOrchestration);
     }
 
     @GetMapping("/account-statement")
-    public ResponseEntity<List<Transaction>> instantPayment(@RequestParam (name = "account", required = true)UUID account) {
+    public ResponseEntity<List<Transaction>> AccountStatement(@RequestParam (name = "account") UUID account) {
         return ResponseEntity.ok(statementService.getAllTransactionsStatements(account));
     }
 }
