@@ -3,12 +3,11 @@ package com.matheus.payments.instant.Application.DTOs.Request;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 public class TransactionRequest {
 
-    private UUID senderId;
-    private UUID receiverId;
+    private String senderKey;
+    private String receiverKey;
     private BigDecimal amount;
 }
