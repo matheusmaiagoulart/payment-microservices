@@ -1,6 +1,5 @@
-package com.matheus.payments.instant.Application.Services.InstantPaymentServices;
+package com.matheus.payments.instant.Application.Services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Domain.Transaction;
@@ -10,10 +9,11 @@ import com.matheus.payments.instant.Infra.Exceptions.Custom.FailedToSentExceptio
 import com.matheus.payments.instant.Infra.Exceptions.Custom.TransactionAlreadySentException;
 import com.matheus.payments.instant.Infra.Exceptions.Custom.TransactionFailedException;
 import com.matheus.payments.instant.Infra.Exceptions.Custom.TransactionNotFound;
-import com.matheus.payments.instant.Infra.Http.Clients.WalletServer;
+import com.matheus.payments.instant.Infra.Http.WalletServer;
 import com.matheus.payments.instant.Infra.Repository.OutboxRepository;
 import com.matheus.payments.instant.Infra.Repository.TransactionRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.shared.Logs.LogBuilder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -46,45 +46,29 @@ public class PaymentProcessorService {
 
         String payloadJson = outbox.getPayload();
         String response;
-
         try {
             log.info("Sending payment to Wallet Server",
-                    kv("http_method", "POST"),
-                    kv("endpoint", "/wallets/instant-payment"),
-                    kv("MS", "Wallet"),
-                    kv("transactionId", transactionId),
-                    kv("class", "PaymentProcessorService"),
-                    kv("method", "sendPaymentToProcessor"),
-                    kv("event", "payment.request.sending"));
+                    LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", transactionId, "PaymentProcessorService", "sendPaymentToProcessor",
+                            kv("event", "payment.request.sending")));
 
-            response = sendToWalletServer(payloadJson);
+            response = sendToWalletServer(payloadJson); // Send instant-payment request to Wallet Server
 
         } catch (FailedToSentException e) {
 
             log.warn("Error to sent a request for Wallet Server",
-                    kv("http_method", "POST"),
-                    kv("endpoint", "/wallets/instant-payment"),
-                    kv("MS", "Wallet"),
-                    kv("transactionId", transactionId),
-                    kv("class", "PaymentProcessorService"),
-                    kv("method", "sendPaymentToProcessor"),
-                    kv("event", "payment.request.send.failed"),
-                    kv("errorMessage", e.getMessage()));
+                    LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", transactionId, "PaymentProcessorService", "sendPaymentToProcessor",
+                            kv("event", "payment.request.send.failed"),
+                            kv("errorMessage", e.getMessage())));
 
             PaymentProcessorResponse failedResponse = PaymentProcessorResponse.connectionFailed(UUID.fromString(transactionId));
             String failedResponseJson = objectMapper.writeValueAsString(failedResponse);
-            paymentStatusUpdate(failedResponseJson);
+            paymentStatusUpdate(failedResponse);
             throw e;
         }
 
         log.info("Successfully sent payment to Wallet Server",
-                kv("http_method", "POST"),
-                kv("endpoint", "/wallets/instant-payment"),
-                kv("MS", "Wallet"),
-                kv("transactionId", transactionId),
-                kv("class", "PaymentProcessorService"),
-                kv("method", "sendPaymentToProcessor"),
-                kv("event", "payment.request.sent.success"));
+                LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", transactionId, "PaymentProcessorService", "sendPaymentToProcessor",
+                        kv("event", "payment.request.sent.success")));
 
         outbox.setSent(true);
         outboxRepository.save(outbox);
@@ -92,36 +76,25 @@ public class PaymentProcessorService {
     }
 
 
-    public PaymentProcessorResponse paymentStatusUpdate(String message) throws JsonProcessingException {
+    public PaymentProcessorResponse paymentStatusUpdate(PaymentProcessorResponse response) {
 
-        PaymentProcessorResponse response = objectMapper.readValue(message, PaymentProcessorResponse.class);
 
         log.info("Payment response received from Wallet Server",
-                kv("http_method", "POST"),
-                kv("endpoint", "/wallets/instant-payment"),
-                kv("MS", "Wallet"),
-                kv("transactionId", response.getTransactionId()),
-                kv("class", "PaymentProcessorService"),
-                kv("method", "paymentStatusUpdate"),
-                kv("event", "payment.response.received"));
+                LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", response.getTransactionId().toString(), "PaymentProcessorService", "paymentStatusUpdate",
+                kv("event", "payment.response.received")));
 
-        Transaction transaction = transactionRepository.findByTransactionId(response.getTransactionId())
-                .orElseThrow(() -> new TransactionNotFound("Transaction with ID " + response.getTransactionId() + " not found."));
+
+        Transaction transaction = getTransactionById(response.getTransactionId());
 
         if (!response.getIsSuccessful()) {
 
-            log.info("Payment response for payment failed from Wallet Server",
-                    kv("http_method", "POST"),
-                    kv("endpoint", "/wallets/instant-payment"),
-                    kv("MS", "Wallet"),
-                    kv("transactionId", response.getTransactionId()),
-                    kv("class", "PaymentProcessorService"),
-                    kv("method", "paymentStatusUpdate"),
-                    kv("event", "payment.response.received.failed"),
-                    kv("failureReason", response.getFailedMessage()));
 
-            TransactionOutbox outbox = outboxRepository.findByTransactionId(response.getTransactionId().toString())
-                    .orElseThrow(() -> new TransactionNotFound("Outbox entry for Transaction ID " + response.getTransactionId() + " not found."));
+            log.warn("Payment response for payment failed from Wallet Server",
+                    LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", response.getTransactionId().toString(), "PaymentProcessorService", "paymentStatusUpdate",
+                            kv("event", "payment.response.failed"),
+                            kv("failureReason", response.getFailedMessage())));
+
+            TransactionOutbox outbox = getOutboxByTransactionId(response.getTransactionId().toString());
 
             outbox.setFailed(true);
             outbox.setFailureReason(response.getFailedMessage());
@@ -135,13 +108,8 @@ public class PaymentProcessorService {
         }
 
         log.info("Payment response received from Wallet Server was successfully",
-                kv("http_method", "POST"),
-                kv("endpoint", "/wallets/instant-payment"),
-                kv("MS", "Wallet"),
-                kv("transactionId", response.getTransactionId()),
-                kv("class", "PaymentProcessorService"),
-                kv("method", "paymentStatusUpdate"),
-                kv("event", "wallet.response.received.success"));
+                LogBuilder.requestLog("POST", "/wallets/instant-payment", "Wallet", response.getTransactionId().toString(), "PaymentProcessorService", "paymentStatusUpdate",
+                        kv("event", "wallet.response.received.success")));
 
         transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setSenderAccountId(response.getSenderAccountId());
@@ -150,10 +118,14 @@ public class PaymentProcessorService {
         return response;
     }
 
-    // Auxiliar methods
+    private Transaction getTransactionById(UUID transactionId) {
+        return transactionRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new TransactionNotFound("Transaction with ID " + transactionId + " not found."));
+    }
 
     private TransactionOutbox getOutboxByTransactionId(String transactionId) {
-        return outboxRepository.findByTransactionId(transactionId).orElseThrow(() -> new TransactionNotFound("Transaction with ID " + transactionId + " not found."));
+        return outboxRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new TransactionNotFound("Transaction with ID " + transactionId + " not found."));
     }
 
     private void ensureNotAlreadySent(TransactionOutbox transaction) {
@@ -168,12 +140,10 @@ public class PaymentProcessorService {
             return response.body();
 
         } catch (IOException e) {
-            System.out.println("Error sending payment to processor error occurred while trying to reach Wallet Server. The payment could not be processed: " + e.getMessage());
             throw new FailedToSentException("Error sending payment to processor occurred while trying to reach Wallet Server. The payment could not be processed!");
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("An error occurred while we processing your payment request. Please try again later! " + e.getMessage());
             throw new FailedToSentException("An error occurred while we processing your payment request. Please try again later!");
         }
     }
