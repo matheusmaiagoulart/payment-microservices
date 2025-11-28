@@ -18,14 +18,21 @@ public class LogBuilder {
     }
 
     public static Object[] requestLog(String httpMethod, String endpoint, String MS, String transactionId, String className, String methodName, Object... additionalKVs) {
-        return new Object[]{
+        var objBase = new Object[]{
                 kv("http_method", httpMethod),
                 kv("endpoint", endpoint),
                 kv("MS", MS),
                 kv("transactionId", transactionId),
                 kv("class", className),
-                kv("method", methodName),
-                kv("additional_info", Arrays.toString(additionalKVs))
+                kv("method", methodName)
         };
+
+        Object[] log = new Object[objBase.length + additionalKVs.length];
+
+        // obj base, index start copy, destination, index start array final, length array base
+        System.arraycopy(objBase, 0, log, 0, objBase.length);
+        System.arraycopy(additionalKVs, 0, log, objBase.length, additionalKVs.length);
+
+        return log;
     }
 }
