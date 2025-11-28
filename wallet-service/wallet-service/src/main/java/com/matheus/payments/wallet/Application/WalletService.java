@@ -1,7 +1,6 @@
 package com.matheus.payments.wallet.Application;
 
 import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
-import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Domain.Wallet.Wallet;
 import com.matheus.payments.wallet.Domain.Wallet.WalletKeys;
@@ -11,6 +10,7 @@ import com.matheus.payments.wallet.Infra.Exceptions.Custom.SameUserException;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.WalletNotFoundException;
 import com.matheus.payments.wallet.Infra.Repository.WalletKeysRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
+import org.shared.DTOs.TransactionDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,7 +92,7 @@ public class WalletService {
                         new InstantPaymentResponse(false, null, null, e.getMessage());
                 case SameUserException sameUserException ->
                         new InstantPaymentResponse(false, null, null, e.getMessage());
-                case InsufficientBalanceException insuficientBalanceException ->
+                case InsufficientBalanceException insufficientBalanceException ->
                         new InstantPaymentResponse(false, senderWallet.getAccountId(), null, e.getMessage());
                 default ->
                         new InstantPaymentResponse(false, senderWallet.getAccountId(), receiverWallet.getAccountId(), "Transaction failed during processing: " + e.getMessage());
