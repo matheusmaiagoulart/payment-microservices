@@ -1,4 +1,4 @@
-package com.matheus.payments.instant.Infra.Http.Clients;
+package com.matheus.payments.instant.Infra.Http;
 
 
 import org.springframework.core.io.ClassPathResource;
