@@ -15,7 +15,6 @@ import java.util.UUID;
 @Getter @Setter
 public class Transaction {
 
-
     @Id
     private UUID transactionId;
 
