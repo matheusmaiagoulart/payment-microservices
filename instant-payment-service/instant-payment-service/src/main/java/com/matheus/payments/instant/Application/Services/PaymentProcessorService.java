@@ -61,7 +61,6 @@ public class PaymentProcessorService {
                             kv("errorMessage", e.getMessage())));
 
             PaymentProcessorResponse failedResponse = PaymentProcessorResponse.connectionFailed(UUID.fromString(transactionId));
-            String failedResponseJson = objectMapper.writeValueAsString(failedResponse);
             paymentStatusUpdate(failedResponse);
             throw e;
         }
