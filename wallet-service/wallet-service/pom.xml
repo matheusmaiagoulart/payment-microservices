@@ -82,6 +82,12 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-sqlserver</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.matheus.shared</groupId>
+            <artifactId>shared</artifactId>
+            <version>1.0.5</version>
+        </dependency>
 	</dependencies>
 
 	<build>
