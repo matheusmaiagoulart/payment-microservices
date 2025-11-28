@@ -1,8 +1,8 @@
 package com.matheus.payments.instant.Application.Mappers;
 
-import com.matheus.payments.instant.Application.DTOs.Response.TransactionDTO;
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
 import com.matheus.payments.instant.Domain.Transaction;
+import org.shared.DTOs.TransactionDTO;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,11 +18,10 @@ public class TransactionMapperImpl implements TransactionMapper {
                 transaction.getSenderAccountId(),
                 transaction.getReceiverAccountId(),
                 transaction.getAmount(),
-                transaction.getStatus(),
+                transaction.getStatus().toString(),
                 transaction.getTimestamp()
         );
     }
-
 
     @Override
     public Transaction mapToEntity(TransactionRequest transactionRequest) {
