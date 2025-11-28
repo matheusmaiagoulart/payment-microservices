@@ -43,19 +43,4 @@ public class PaymentProcessorResponse {
         response.failedMessage = null;
         return response;
     }
-
-    public static PaymentProcessorResponse connectionFailed(UUID transactionId) {
-
-        PaymentProcessorResponse response = new PaymentProcessorResponse();
-        response.transactionId = transactionId;
-        response.isSent = true;
-        response.isFailed = true;
-        response.isSuccessful = false;
-        response.senderAccountId = null;
-        response.receiverAccountId = null;
-        response.failedMessage = "Error sending payment to processor occurred while trying to reach Wallet Server. The payment could not be processed!";
-        return response;
-    }
-
-
 }
