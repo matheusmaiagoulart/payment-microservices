@@ -1,37 +1,42 @@
 package com.matheus.payments.wallet.Api.Controller;
 
 import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
-import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Application.DTOs.Response.PaymentProcessorResponse;
-import com.matheus.payments.wallet.Application.PaymentProcessorService;
 import com.matheus.payments.wallet.Application.WalletService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.shared.DTOs.TransactionDTO;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/wallets")
 public class WalletController {
 
-    @Autowired
-    private WalletService walletService;
+    private final WalletService walletService;
 
-    @Autowired
-    private PaymentProcessorService paymentProcessorService;
+    public WalletController(WalletService walletService) {this.walletService = walletService; }
 
-    @PostMapping("/create")
-    public HttpStatus createWallet(@RequestBody CreateWalletRequest request) {
+    @PostMapping("/createAccount")
+    public ResponseEntity<String> createWallet(@RequestBody CreateWalletRequest request) {
 
-        var result = walletService.createWallet(request.getUserId(), request.getAccountType());
-        return result;
+        var result = walletService.createWallet(request);
+
+        if (!result) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wallet already exists for this user.");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Wallet created successfully.");
     }
 
     @PostMapping("/instant-payment")
     public PaymentProcessorResponse instantPayment(@RequestBody TransactionDTO request) {
-        return walletService.handlePaymentProcessor(request);
+
+        InstantPaymentResponse result = walletService.handlePaymentProcessor(request);
+
+        if(result.isSucessful()){
+            return PaymentProcessorResponse.successResponse(UUID.fromString(request.getTransactionId()), result.getSenderAccountId(), result.getReceiverAccountId());
+        } else {
+            return PaymentProcessorResponse.failedResponse(UUID.fromString(request.getTransactionId()), result.getSenderAccountId(), result.getReceiverAccountId(), result.getFailedMessage());
+        }
     }
 }
