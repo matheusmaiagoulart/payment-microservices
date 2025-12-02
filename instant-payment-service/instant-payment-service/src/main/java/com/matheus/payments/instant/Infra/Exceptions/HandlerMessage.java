@@ -1,6 +1,5 @@
-package com.matheus.payments.instant.Infra.Exceptions.Handler;
+package com.matheus.payments.instant.Infra.Exceptions;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
