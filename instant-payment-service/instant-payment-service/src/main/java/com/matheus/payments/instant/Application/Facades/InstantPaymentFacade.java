@@ -1,32 +1,40 @@
 package com.matheus.payments.instant.Application.Facades;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.matheus.payments.instant.Application.Audit.InstantPaymentFacadeAudit;
 import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
 import com.matheus.payments.instant.Application.Services.OutboxService;
 import com.matheus.payments.instant.Application.Services.PaymentProcessorService;
 import com.matheus.payments.instant.Application.Services.TransactionService;
-import lombok.extern.slf4j.Slf4j;
-import org.shared.Logs.LogBuilder;
+
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 
-
-@Slf4j
+/**
+ * Facade Class is responsible for orchestrating the instant payment process.
+ * It integrates various services to handle with workflow process
+ *
+ * @author Matheus Maia Goulart
+ */
 @Service
 public class InstantPaymentFacade {
 
+
+    private final ObjectMapper objectMapper;
+    private final OutboxService outboxService;
+    private final InstantPaymentFacadeAudit audit;
     private final TransactionService transactionService;
     private final PaymentProcessorService paymentProcessorService;
-    private final OutboxService outboxService;
-    private final ObjectMapper objectMapper;
 
     public InstantPaymentFacade
             (ObjectMapper objectMapper,
              OutboxService outboxService,
+             InstantPaymentFacadeAudit audit,
              TransactionService transactionService,
-             PaymentProcessorService paymentProcessorService)
-    {
+             PaymentProcessorService paymentProcessorService) {
+        this.audit = audit;
         this.objectMapper = objectMapper;
         this.outboxService = outboxService;
         this.transactionService = transactionService;
@@ -37,12 +45,12 @@ public class InstantPaymentFacade {
 
         // Create the payment process to generate transactionID
         String transactionId = transactionService.createPaymentProcess(request);
+        request.setTransactionId(transactionId);
 
         // Create Outbox Entry
         outboxService.createOutboxEntry(transactionId, objectMapper.writeValueAsString(request));
 
-        log.info("Payment processing started",
-                LogBuilder.serviceLog("/transaction/pix", "Payment", transactionId, "PaymentService", "paymentOrchestration", "payment.processing.started"));
+        audit.logPaymentProcessStarting(transactionId); // LOG
 
         // Send payment to processor (Wallet Server)
         String processorResponseJson = paymentProcessorService.sendPaymentToProcessor(transactionId);
