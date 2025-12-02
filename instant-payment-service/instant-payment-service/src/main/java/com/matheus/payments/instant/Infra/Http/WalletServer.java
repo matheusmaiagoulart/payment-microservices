@@ -2,6 +2,8 @@ package com.matheus.payments.instant.Infra.Http;
 
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLContext;
@@ -13,6 +15,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.KeyStore;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
 @Service
 public class WalletServer {
@@ -36,14 +40,17 @@ public class WalletServer {
         // Cria o HttpClient com SSL customizado
         this.responseClient = HttpClient.newBuilder()
                 .sslContext(sslContext)
+                .connectTimeout(Duration.ofSeconds(5)) // Setting a connection timeout
                 .build();
     }
 
-    public HttpResponse<String> instantPaymentRequest(String jsonPayload) throws IOException, InterruptedException {
+    @Retryable(retryFor = {IOException.class, InterruptedException.class}, maxAttempts = 4, backoff = @Backoff (delay = 1000, multiplier = 1.5))
+    public HttpResponse<String> instantPaymentRequest(String jsonPayload) throws IOException, InterruptedException, TimeoutException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://localhost:8081/wallets/instant-payment"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .timeout(Duration.ofSeconds(30)) // Setting a request timeout
                 .build();
 
         return responseClient.send(request, HttpResponse.BodyHandlers.ofString());
