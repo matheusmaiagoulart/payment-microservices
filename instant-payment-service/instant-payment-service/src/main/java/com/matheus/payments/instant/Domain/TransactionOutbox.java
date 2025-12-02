@@ -7,6 +7,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a Transaction Outbox Pattern entry for reliable message delivery.
+ * <p>
+ * This class manages details related to Transaction and stores related data about the Transaction processing.
+ * <p>
+ *  It is used to manage delivery status, failure reasons and ensure consistency in the Transaction processing workflow.
+ */
 @Getter
 @Setter
 @Document(collection = "transaction_outbox")
