@@ -1,9 +1,8 @@
-package com.matheus.payments.wallet.Domain.Wallet;
+package com.matheus.payments.wallet.Domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.UUID;
 
@@ -14,9 +13,10 @@ public class WalletKeys {
 
     @Id
     private UUID id;
+    @Column(name = "key_value")
     private String keyValue;
     private keyType type;
-    private UUID walletId;
+    private UUID accountId;
 
 
     protected WalletKeys() {
@@ -26,6 +26,6 @@ public class WalletKeys {
         this.id = UUID.randomUUID();
         this.keyValue = keyValue;
         this.type = type;
-        this.walletId = walletId;
+        this.accountId = walletId;
     }
 }
