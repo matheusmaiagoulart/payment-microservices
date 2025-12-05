@@ -1,0 +1,37 @@
+<configuration>
+
+    <!-- APPENDER NORMAL (texto) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- APPENDER JSON PERSONALIZADO -->
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <!-- Campos básicos -->
+                <timestamp />
+                <logLevel />
+                <message />
+
+                <!-- Campos customizados via log.info(kv()) -->
+                <arguments />
+
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- ROOT -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- SOMENTE SEU PACOTE USA JSON -->
+    <logger name="com.matheus.payments" level="INFO" additivity="false">
+        <appender-ref ref="JSON"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+</configuration>
