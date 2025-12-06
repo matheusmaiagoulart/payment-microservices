@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Domain.Wallet;
+package com.matheus.payments.wallet.Domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
