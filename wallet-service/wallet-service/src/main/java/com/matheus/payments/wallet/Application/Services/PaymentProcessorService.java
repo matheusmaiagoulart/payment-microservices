@@ -1,22 +1,26 @@
-package com.matheus.payments.wallet.Application;
+package com.matheus.payments.wallet.Application.Services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.matheus.payments.wallet.Application.DTOs.Request.TransactionDTO;
-import com.matheus.payments.wallet.Application.DTOs.Response.PaymentProcessorResponse;
+import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.utils.KafkaTopics;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.shared.DTOs.TransactionDTO;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+
 
 @Service
 public class PaymentProcessorService {
 
     private ObjectMapper objectMapper;
     private WalletService walletService;
-    public PaymentProcessorService(ObjectMapper objectMapper, WalletService walletService) {
+    private KafkaTemplate kafkaTemplate;
+    public PaymentProcessorService(ObjectMapper objectMapper, WalletService walletService, KafkaTemplate kafkaTemplate) {
         this.objectMapper = objectMapper;
         this.walletService = walletService;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @KafkaListener(topics = KafkaTopics.INSTANT_PAYMENT_TOPIC, groupId = "wallet-service-group")
@@ -32,6 +36,9 @@ public class PaymentProcessorService {
         System.out.println("Key: " + key);
 
 
-        PaymentProcessorResponse result = walletService.handlePaymentProcessor(request);
+        InstantPaymentResponse result = walletService.transferProcess(request);
+
+        String responseJson = objectMapper.writeValueAsString(result);
+        kafkaTemplate.send(KafkaTopics.INSTANT_PAYMENT_TOPIC_RESPONSE, key, responseJson);
     }
 }
