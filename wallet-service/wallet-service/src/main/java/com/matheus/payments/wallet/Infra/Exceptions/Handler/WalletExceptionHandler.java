@@ -1,9 +1,6 @@
 package com.matheus.payments.wallet.Infra.Exceptions.Handler;
 
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.InsufficientBalanceException;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.KeyValueAlreadyExists;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.SameUserException;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.WalletNotFoundException;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -34,5 +31,11 @@ public class WalletExceptionHandler {
     private ResponseEntity<HandlerMessage> KeyValueAlreadyExists(KeyValueAlreadyExists keyValueAlreadyExists){
         HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.BAD_REQUEST , keyValueAlreadyExists.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handlerMessage);
+    }
+
+    @ExceptionHandler(TransactionAlreadyProcessed.class)
+    private ResponseEntity<HandlerMessage> TransactionAlreadyProcessed(TransactionAlreadyProcessed transactionAlreadyProcessed){
+        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.CONFLICT , "Transaction has already been processed.");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(handlerMessage);
     }
 }
