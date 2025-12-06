@@ -40,3 +40,6 @@ Thumbs.db
 
 # Spring Boot
 spring.log
+
+# Security / Certificates (keep in gitignore comment for tracking)
+# Uncomment to ignore: *.p12, *.jks, *.crt, *.key, *.pem
