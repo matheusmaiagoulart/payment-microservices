@@ -55,6 +55,7 @@ public class WalletService {
             walletKeysRepository.save(walletKeys);
 
             return true;
+
         } catch (PersistenceException e) {
             throw new PersistenceException("An error occurred while creating the wallet: " + e.getMessage());
         }
@@ -62,30 +63,21 @@ public class WalletService {
 
     @Transactional
     public InstantPaymentResponse transferProcess(TransactionDTO request) {
-
         audit.logStartingTransferProcess(request.getTransactionId()); // LOG
 
-        WalletKeys accountIdSender = getWalletIdByKey(request.getSenderKey())
-                .orElseThrow(() -> new WalletNotFoundException("Sender account not found"));
-
-        WalletKeys accountIdReceiver = getWalletIdByKey(request.getReceiverKey())
-                .orElseThrow(() -> new WalletNotFoundException("Receiver account not found"));
-
+        WalletKeys accountIdSender = getWalletIdByKey(request.getSenderKey()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        WalletKeys accountIdReceiver = getWalletIdByKey(request.getReceiverKey()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
         sameUserValidation(accountIdSender.getAccountId(), accountIdReceiver.getAccountId());
 
-        Wallet senderWallet = getWalletById(accountIdSender.getAccountId()).orElseThrow(() ->
-                new WalletNotFoundException("Sender wallet not found or inactive"));
-
-
-        Wallet receiverWallet = getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() ->
-                new WalletNotFoundException("Receiver wallet not found or inactive"));
+        Wallet senderWallet = getWalletById(accountIdSender.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        Wallet receiverWallet = getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
         try {
             audit.logBalanceValidation(request.getTransactionId()); // LOG
             var resultValidationBalance = balanceValidation(senderWallet.getBalance(), request.getAmount());
             if (resultValidationBalance < 0) {
-                throw new InsufficientBalanceException("Insufficient funds in sender's wallet");
+                throw new InsufficientBalanceException();
             }
 
             BigDecimal amount = request.getAmount();
@@ -99,33 +91,20 @@ public class WalletService {
             saveTransactionProcessed(new TransactionsProcessed(UUID.fromString(request.getTransactionId()))); // Idempotency
 
             audit.logTransferSuccess(request.getTransactionId()); // LOG
-
-        } catch (Exception e) {
+        }
+        catch (WalletNotFoundException | SameUserException | InsufficientBalanceException | TransactionAlreadyProcessed | DataAccessException e) {
 
             audit.logTransferError(request.getTransactionId(), e.getMessage()); // LOG
-            return switch (e) {
-                case WalletNotFoundException walletNotFoundException ->
-                        new InstantPaymentResponse(false, null, null, e.getMessage());
 
-                case SameUserException sameUserException ->
-                        new InstantPaymentResponse(false, null, null, e.getMessage());
+            // If transaction already processed, consider it a success = true because the transfer was already made
+            boolean success = e instanceof TransactionAlreadyProcessed; // Can be true or false, depending on the exception (only true if TransactionAlreadyProcessed)
 
-                case InsufficientBalanceException insufficientBalanceException ->
-                        new InstantPaymentResponse(false, senderWallet.getAccountId(), receiverWallet.getAccountId(), e.getMessage());
+            UUID senderId = senderWallet != null ? senderWallet.getAccountId() : null;
+            UUID receiverId = receiverWallet != null ? receiverWallet.getAccountId() : null;
 
-                case DataAccessException databaseException ->
-                        new InstantPaymentResponse(false, senderWallet.getAccountId(), receiverWallet.getAccountId(), "Database error occurred: " + e.getMessage());
-
-                case TransactionAlreadyProcessed transactionAlreadyProcessed ->
-                        new InstantPaymentResponse(true, senderWallet.getAccountId(), receiverWallet.getAccountId(), e.getMessage());
-
-                default -> new InstantPaymentResponse(
-                        false,
-                        senderWallet != null ? senderWallet.getAccountId() : null,
-                        receiverWallet != null ? receiverWallet.getAccountId() : null,
-                        "Transaction failed during processing: " + e.getMessage());
-            };
+            return new InstantPaymentResponse(success, senderId, receiverId, e.getMessage());
         }
+
         return new InstantPaymentResponse(true, senderWallet.getAccountId(), receiverWallet.getAccountId());
     }
 
