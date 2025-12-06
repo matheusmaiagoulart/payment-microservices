@@ -1,6 +1,6 @@
 CREATE TABLE wallets
 (
-    account_id   uniqueidentifier NOT NULL,
+    account_id UNIQUEIDENTIFIER NOT NULL,
     balance      decimal(18, 2),
     account_type smallint,
     is_active    bit,
