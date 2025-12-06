@@ -38,4 +38,14 @@ public class Transaction {
         this.status = TransactionStatus.PENDING;
     }
 
+    public void setTransactionCompleted(UUID senderAccountId, UUID receiverAccountId){
+        this.status = TransactionStatus.COMPLETED;
+        this.senderAccountId = senderAccountId;
+        this.receiverAccountId = receiverAccountId;
+    }
+
+    public void setTransactionFailed(){
+        this.status = TransactionStatus.FAILED;
+    }
+
 }

@@ -37,4 +37,10 @@ public class TransactionOutbox {
         this.failureReason = null;
         this.failureAt = null;
     }
+
+    public void failedTransaction(String failedReason){
+        this.failed = true;
+        this.failureReason = failedReason;
+        this.failureAt = LocalDateTime.now();
+    }
 }
