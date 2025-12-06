@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Api.Controller;
 import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Application.DTOs.Response.PaymentProcessorResponse;
-import com.matheus.payments.wallet.Application.WalletService;
+import com.matheus.payments.wallet.Application.Services.WalletService;
 import org.shared.DTOs.TransactionDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +31,7 @@ public class WalletController {
     @PostMapping("/instant-payment")
     public PaymentProcessorResponse instantPayment(@RequestBody TransactionDTO request) {
 
-        InstantPaymentResponse result = walletService.handlePaymentProcessor(request);
+        InstantPaymentResponse result = walletService.transferProcess(request);
 
         if(result.isSucessful()){
             return PaymentProcessorResponse.successResponse(UUID.fromString(request.getTransactionId()), result.getSenderAccountId(), result.getReceiverAccountId());
