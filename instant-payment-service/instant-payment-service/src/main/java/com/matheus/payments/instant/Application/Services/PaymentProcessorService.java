@@ -1,39 +1,34 @@
 package com.matheus.payments.instant.Application.Services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.instant.Application.Audit.PaymentProcessorAudit;
 import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Domain.Transaction;
 import com.matheus.payments.instant.Domain.TransactionOutbox;
-import com.matheus.payments.instant.Domain.TransactionStatus;
 import com.matheus.payments.instant.Infra.Exceptions.Custom.*;
 import com.matheus.payments.instant.Infra.Http.WalletServer;
 import com.matheus.payments.instant.Infra.Repository.OutboxRepository;
 import com.matheus.payments.instant.Infra.Repository.TransactionRepository;
-import lombok.extern.slf4j.Slf4j;
-import org.shared.Logs.LogBuilder;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
-
-@Slf4j
 @Service
 public class PaymentProcessorService {
 
     private final PaymentProcessorAudit audit;
+    private final KafkaTemplate<String, String> kafka;
     private final OutboxRepository outboxRepository;
     private final WalletServer walletServerRequest;
     private final TransactionRepository transactionRepository;
 
-    public PaymentProcessorService(OutboxRepository outboxRepository, WalletServer walletServerRequest, TransactionRepository transactionRepository, PaymentProcessorAudit audit) {
+    public PaymentProcessorService(OutboxRepository outboxRepository, WalletServer walletServerRequest, TransactionRepository transactionRepository, PaymentProcessorAudit audit, KafkaTemplate<String, String> kafka) {
         this.audit = audit;
         this.outboxRepository = outboxRepository;
+        this.kafka = kafka;
         this.walletServerRequest = walletServerRequest;
         this.transactionRepository = transactionRepository;
     }
@@ -42,17 +37,14 @@ public class PaymentProcessorService {
 
         var outbox = getOutboxByTransactionId(transactionId);
         ensureNotAlreadySent(outbox);
-
         String payloadJson = outbox.getPayload();
         String response;
         try {
             audit.logSendingRequestWallet(transactionId); // LOG
             response = sendToWalletServer(payloadJson);
 
-        } catch (FailedToSentException e)
-        {
-            audit.logErrorSendingRequestWallet(transactionId, e);
-
+        } catch (FailedToSentException e) {
+            audit.logErrorSendingRequestWallet(transactionId, e); // LOG
             PaymentProcessorResponse failedResponse = PaymentProcessorResponse.connectionFailed(UUID.fromString(transactionId));
             paymentStatusUpdate(failedResponse);
             throw e;
@@ -67,34 +59,27 @@ public class PaymentProcessorService {
 
     public PaymentProcessorResponse paymentStatusUpdate(PaymentProcessorResponse response) {
 
-        audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
-
         Transaction transaction = getTransactionById(response.getTransactionId());
+        TransactionOutbox outbox = getOutboxByTransactionId(response.getTransactionId().toString());
+
+        if(!response.getIsSent()){
+            audit.logReceivedNotSentResponse(response.getTransactionId().toString()); // LOG
+            handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
+            throw new FailedToSentException(response.getFailedMessage());
+        }
 
         if (!response.getIsSuccessful())
         {
+            audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
             audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
-
-            TransactionOutbox outbox = getOutboxByTransactionId(response.getTransactionId().toString());
-
-            outbox.setFailed(true);
-            outbox.setFailureReason(response.getFailedMessage());
-            outbox.setFailureAt(LocalDateTime.now());
-            outboxRepository.save(outbox);
-
-            transaction.setStatus(TransactionStatus.FAILED);
-            transactionRepository.save(transaction);
-
+            handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
             throw new TransactionFailedException(response.getFailedMessage());
         }
 
         audit.logReceivedSuccessResponse(transaction.getTransactionId().toString()); // LOG
 
-        transaction.setStatus(TransactionStatus.COMPLETED);
-        transaction.setSenderAccountId(response.getSenderAccountId());
-        transaction.setReceiverAccountId(response.getReceiverAccountId());
+        transaction.setTransactionCompleted(response.getSenderAccountId(), response.getReceiverAccountId());
         transactionRepository.save(transaction);
-
         return response;
     }
 
@@ -129,6 +114,14 @@ public class PaymentProcessorService {
         catch (TimeoutException e) {
             throw new FailedToSentException("Timeout occurred while trying to reach Wallet Server. The request took too long to complete!");
         }
+    }
+
+    private void handleFailedTransaction(String failedMessage, Transaction transaction, TransactionOutbox outbox) {
+        outbox.failedTransaction(failedMessage);
+        outboxRepository.save(outbox);
+
+        transaction.setTransactionFailed();
+        transactionRepository.save(transaction);
     }
 }
 
