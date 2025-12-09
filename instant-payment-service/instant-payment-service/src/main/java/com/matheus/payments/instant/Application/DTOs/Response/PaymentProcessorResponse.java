@@ -20,7 +20,7 @@ public class PaymentProcessorResponse {
     {
         PaymentProcessorResponse response = new PaymentProcessorResponse();
         response.transactionId = transactionId;
-        response.isSent = true;
+        response.isSent = false;
         response.isFailed = true;
         response.isSuccessful = false;
         response.senderAccountId = null;
