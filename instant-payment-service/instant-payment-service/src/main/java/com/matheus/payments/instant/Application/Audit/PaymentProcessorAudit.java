@@ -57,5 +57,11 @@ public class PaymentProcessorAudit {
                         kv("event", "wallet.response.received.failed"),
                         kv("failureReason", failureReason)));
     }
+    public void logReceivedNotSentResponse(String transactionId) {
+        log.warn("An error occurred while sending payment to Wallet Server",
+                LogBuilder.requestLog("POST", WALLET_ENDPOINT, WALLET_SERVICE_NAME, transactionId, CLASS_NAME, "paymentStatusUpdate",
+                        kv("event", "wallet.request.not.sent")));
+
+    }
 
 }
