@@ -25,12 +25,6 @@ public class DataBaseExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(handlerMessage);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<HandlerMessage> Exception(Exception e) {
-        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(handlerMessage);
-    }
-
     @ExceptionHandler(DataBaseException.class)
     public ResponseEntity<HandlerMessage> DataBaseException(DataBaseException dataBaseException) {
         HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.SERVICE_UNAVAILABLE, dataBaseException.getMessage());
