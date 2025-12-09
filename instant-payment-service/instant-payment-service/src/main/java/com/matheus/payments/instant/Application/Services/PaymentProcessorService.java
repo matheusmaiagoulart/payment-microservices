@@ -20,15 +20,13 @@ import java.util.concurrent.TimeoutException;
 public class PaymentProcessorService {
 
     private final PaymentProcessorAudit audit;
-    private final KafkaTemplate<String, String> kafka;
     private final OutboxRepository outboxRepository;
     private final WalletServer walletServerRequest;
     private final TransactionRepository transactionRepository;
 
-    public PaymentProcessorService(OutboxRepository outboxRepository, WalletServer walletServerRequest, TransactionRepository transactionRepository, PaymentProcessorAudit audit, KafkaTemplate<String, String> kafka) {
+    public PaymentProcessorService(OutboxRepository outboxRepository, WalletServer walletServerRequest, TransactionRepository transactionRepository, PaymentProcessorAudit audit) {
         this.audit = audit;
         this.outboxRepository = outboxRepository;
-        this.kafka = kafka;
         this.walletServerRequest = walletServerRequest;
         this.transactionRepository = transactionRepository;
     }
@@ -62,14 +60,13 @@ public class PaymentProcessorService {
         Transaction transaction = getTransactionById(response.getTransactionId());
         TransactionOutbox outbox = getOutboxByTransactionId(response.getTransactionId().toString());
 
-        if(!response.getIsSent()){
+        if (!response.getIsSent()) {
             audit.logReceivedNotSentResponse(response.getTransactionId().toString()); // LOG
             handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
             throw new FailedToSentException(response.getFailedMessage());
         }
 
-        if (!response.getIsSuccessful())
-        {
+        if (!response.getIsSuccessful()) {
             audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
             audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
             handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
@@ -106,12 +103,10 @@ public class PaymentProcessorService {
 
         } catch (IOException e) {
             throw new FailedToSentException("Error sending payment to processor occurred while trying to reach Wallet Server. The payment could not be processed!");
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new FailedToSentException("An error occurred while we processing your payment request. Please try again later!");
-        }
-        catch (TimeoutException e) {
+        } catch (TimeoutException e) {
             throw new FailedToSentException("Timeout occurred while trying to reach Wallet Server. The request took too long to complete!");
         }
     }
