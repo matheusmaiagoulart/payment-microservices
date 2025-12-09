@@ -18,6 +18,12 @@ import java.security.KeyStore;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Class responsible for making HTTPS request to Wallet Service for instant payment processing.
+ *
+ * @author Matheus Maia Goularet
+ */
+
 @Service
 public class WalletServer {
 
