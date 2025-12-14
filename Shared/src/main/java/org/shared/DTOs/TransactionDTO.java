@@ -55,6 +55,7 @@ public class TransactionDTO {
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
+
     public String getStatus() {
         return status;
     }
