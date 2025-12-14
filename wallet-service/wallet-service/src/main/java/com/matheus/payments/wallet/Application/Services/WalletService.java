@@ -145,4 +145,17 @@ public class WalletService {
         }
     }
 
+    /**
+     * This method checks if the transaction was already processed, ensuring idempotency.
+     *
+     * @param transactionId
+     * @throws TransactionAlreadyProcessed
+     */
+    private void checkTransactionAlreadyProcessed(UUID transactionId) {
+        var result = transactionsProcessed.existsById(transactionId);
+        if (result) {
+            throw new TransactionAlreadyProcessed();
+        }
+    }
+
 }
