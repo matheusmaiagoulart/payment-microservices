@@ -9,7 +9,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "wallet_keys")
 @Getter @Setter
-public class WalletKeys {
+public class PixKey {
 
     @Id
     private UUID id;
@@ -19,10 +19,10 @@ public class WalletKeys {
     private UUID accountId;
 
 
-    protected WalletKeys() {
+    protected PixKey() {
     }
 
-    public WalletKeys(String keyValue, keyType type, UUID walletId) {
+    public PixKey(String keyValue, keyType type, UUID walletId) {
         this.id = UUID.randomUUID();
         this.keyValue = keyValue;
         this.type = type;
