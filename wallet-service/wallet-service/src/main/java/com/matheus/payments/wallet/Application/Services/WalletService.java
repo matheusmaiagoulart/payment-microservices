@@ -16,12 +16,10 @@ import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import jakarta.persistence.PersistenceException;
 import org.shared.DTOs.TransactionDTO;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -90,16 +88,11 @@ public class WalletService {
         return walletRepository.findByAccountIdAndIsActiveTrue(walletId);
     }
 
-    public Optional<WalletKeys> getWalletIdByKey(String keyValue) {
-        return walletKeysRepository.findAccountIdByKey(keyValue);
+    public Optional<PixKey> getWalletIdByKey(String keyValue) {
+        return pixKeyRepository.findAccountIdByKey(keyValue);
     }
 
-    public int balanceValidation(BigDecimal senderBalance, BigDecimal amount) {
-        // Sufficient balance validation (-1 (invalid), 0 (equal), 1 (sufficient))
-        return Integer.compare(senderBalance.compareTo(amount), 0);
-    }
-
-    public void sameUserValidation(UUID senderWalletId, UUID receiverWalletId) {
+    private void sameUserValidation(UUID senderWalletId, UUID receiverWalletId) {
         // Same user validation
         if (senderWalletId.equals(receiverWalletId)) {
             throw new SameUserException("Sender and Receiver cannot be the same");
