@@ -78,17 +78,6 @@ public class WalletService {
 
             return successTransfer(pixTransfer);
         }
-        catch (WalletNotFoundException | SameUserException | InsufficientBalanceException | TransactionAlreadyProcessed | DataAccessException e) {
-
-            audit.logTransferError(request.getTransactionId(), e.getMessage()); // LOG
-
-            // If transaction already processed, consider it a success = true because the transfer was already made
-            boolean success = e instanceof TransactionAlreadyProcessed; // Can be true or false, depending on the exception (only true if TransactionAlreadyProcessed)
-
-            UUID senderId = senderWallet != null ? senderWallet.getAccountId() : null;
-            UUID receiverId = receiverWallet != null ? receiverWallet.getAccountId() : null;
-
-            return new InstantPaymentResponse(success, senderId, receiverId, e.getMessage());
         catch (TransactionAlreadyProcessed e) {
             return idempotencyError(pixTransfer, e);
         }
@@ -117,9 +106,15 @@ public class WalletService {
         }
     }
 
-    public void saveTransactionProcessed(TransactionsProcessed transaction) {
+    /**
+     * Save transactionId to processed transactions for idempotency control.
+     *
+     * @param transactionId
+     * @throws TransactionAlreadyProcessed If transaction was already processed
+     */
+    private void saveProcessedTransaction(UUID transactionId) {
         try {
-            transactionsProcessed.save(transaction);
+            transactionsProcessed.save(new TransactionsProcessed(transactionId));
         } catch (DataIntegrityViolationException e) {
             throw new TransactionAlreadyProcessed();
         }
