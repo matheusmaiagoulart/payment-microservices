@@ -172,4 +172,19 @@ public class WalletService {
 
         return new PixTransfer(request.getTransactionId(), senderWallet, receiverWallet, accountIdSender, accountIdReceiver, request.getAmount());
     }
+
+    private void transferExecution(PixTransfer pixTransfer) {
+        sameUserValidation(pixTransfer.getSenderPixKey().getAccountId(), pixTransfer.getReceiverPixKey().getAccountId());
+
+        audit.logBalanceValidation(pixTransfer.getTransactionId().toString()); // LOG
+
+        // Sufficient balance validation is done inside debitAccount method
+        pixTransfer.getSenderWallet().debitAccount(pixTransfer.getAmount());
+        pixTransfer.getReceiverWallet().creditAccount(pixTransfer.getAmount());
+
+        walletRepository.save(pixTransfer.getSenderWallet());
+        walletRepository.save(pixTransfer.getReceiverWallet());
+
+        saveProcessedTransaction(pixTransfer.getTransactionId()); // Idempotency
+    }
 }
