@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Application.Services;
+package com.matheus.payments.wallet.Application.UseCases;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 public class PaymentProcessorService {
 
     private ObjectMapper objectMapper;
-    private WalletService walletService;
+    private InstantPayment walletService;
     private KafkaTemplate kafkaTemplate;
-    public PaymentProcessorService(ObjectMapper objectMapper, WalletService walletService, KafkaTemplate kafkaTemplate) {
+    public PaymentProcessorService(ObjectMapper objectMapper, InstantPayment walletService, KafkaTemplate kafkaTemplate) {
         this.objectMapper = objectMapper;
         this.walletService = walletService;
         this.kafkaTemplate = kafkaTemplate;
