@@ -1,7 +1,7 @@
-package com.matheus.payments.wallet.Infra.Exceptions.Custom;
+package com.matheus.payments.wallet.Domain.Exceptions;
 
 
-public class SameUserException extends RuntimeException {
+public class SameUserException extends DomainException {
     public SameUserException() {
         super();
     }

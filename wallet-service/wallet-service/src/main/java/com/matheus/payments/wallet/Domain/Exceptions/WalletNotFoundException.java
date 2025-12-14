@@ -1,6 +1,6 @@
-package com.matheus.payments.wallet.Infra.Exceptions.Custom;
+package com.matheus.payments.wallet.Domain.Exceptions;
 
-public class WalletNotFoundException extends RuntimeException {
+public class WalletNotFoundException extends DomainException {
     public WalletNotFoundException(String message) {
         super(message);
     }
