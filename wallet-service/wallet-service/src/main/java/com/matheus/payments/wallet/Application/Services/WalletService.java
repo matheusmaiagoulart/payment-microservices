@@ -158,4 +158,18 @@ public class WalletService {
         }
     }
 
+    /**
+     * This method populate the PixTransfer, who holds all necessary information for the transfer process.
+     *
+     * @param request All data from the transfer request
+     */
+    private PixTransfer createPixTransfer(TransactionDTO request) {
+        PixKey accountIdSender = getWalletIdByKey(request.getSenderKey()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        PixKey accountIdReceiver = getWalletIdByKey(request.getReceiverKey()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
+
+        Wallet senderWallet = getWalletById(accountIdSender.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        Wallet receiverWallet = getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
+
+        return new PixTransfer(request.getTransactionId(), senderWallet, receiverWallet, accountIdSender, accountIdReceiver, request.getAmount());
+    }
 }
