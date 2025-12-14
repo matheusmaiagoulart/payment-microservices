@@ -1,14 +1,20 @@
 package com.matheus.payments.wallet.Application.Services;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
+import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
+import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.TransactionsProcessed;
 import com.matheus.payments.wallet.Domain.Wallet;
 import com.matheus.payments.wallet.Domain.WalletKeys;
+import com.matheus.payments.wallet.Domain.PixKey;
+import com.matheus.payments.wallet.Domain.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
 import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletKeysRepository;
+import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
+import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import jakarta.persistence.PersistenceException;
 import org.shared.DTOs.TransactionDTO;
@@ -26,37 +32,39 @@ public class WalletService {
 
     private final WalletServiceAudit audit;
     private final WalletRepository walletRepository;
-    private final WalletKeysRepository walletKeysRepository;
+    private final PixKeyRepository pixKeyRepository;
+    private final WalletLedgeRepository walletLedgeRepository;
     private final TransactionProcessedRepository transactionsProcessed;
 
-    public WalletService(WalletRepository walletRepository, WalletKeysRepository walletKeysRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed) {
+    public WalletService(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed, WalletLedgeRepository walletLedgeRepository) {
         this.audit = audit;
         this.walletRepository = walletRepository;
         this.walletKeysRepository = walletKeysRepository;
+        this.pixKeyRepository = pixKeyRepository;
+        this.walletLedgeRepository = walletLedgeRepository;
         this.transactionsProcessed = transactionsProcessed;
     }
 
     @Transactional
     public boolean createWallet(CreateWalletRequest request) {
-
         try {
-            System.out.println("Creating wallet for user: " + request.keyValue);
+            audit.logCreatingWallet(request.keyValue); // LOG
 
-            boolean keyExists = walletKeysRepository.existsWalletKeysByKeyValue(request.keyValue);
+            boolean keyExists = pixKeyRepository.existsWalletKeysByKeyValue(request.keyValue);
 
             if (keyExists) {
-                throw new KeyValueAlreadyExists("Key value already exists: " + request.keyValue);
+                audit.logFailedCreateWallet(request.keyValue);
+                throw new PixKeyAlreadyRegisteredException(request.keyValue);
             }
 
             Wallet wallet = new Wallet(request.accountType);
             walletRepository.save(wallet);
 
-            WalletKeys walletKeys = new WalletKeys(request.keyValue, request.keyType, wallet.getAccountId());
-            walletKeysRepository.save(walletKeys);
-
+            PixKey walletKeys = new PixKey(request.keyValue, request.keyType, wallet.getAccountId());
+            pixKeyRepository.save(walletKeys);
             return true;
-
         } catch (PersistenceException e) {
+            audit.logFailedGeneric("An error occurred while creating the wallet: " + e.getMessage(), request.keyValue);
             throw new PersistenceException("An error occurred while creating the wallet: " + e.getMessage());
         }
     }
