@@ -120,4 +120,29 @@ public class WalletService {
         }
     }
 
+    /**
+     * This method register ledger entries for debit and credit operations, to audit transactions and wallet operations.
+     *
+     * @param pixTransfer Data transfer context
+     * @throws FailedToSaveLedgeEntry
+     */
+    private void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
+        UUID transactionId = pixTransfer.getTransactionId();
+        UUID senderWalletId = pixTransfer.getSenderPixKey().getAccountId();
+        UUID receiverWalletId = pixTransfer.getReceiverPixKey().getAccountId();
+
+        WalletLedger entryDebit = new WalletLedger()
+                .createDebitEntry(transactionId.toString(), senderWalletId, receiverWalletId, pixTransfer.getAmount());
+
+        WalletLedger entryCredit = new WalletLedger()
+                .createCreditEntry(transactionId.toString(), receiverWalletId, senderWalletId, pixTransfer.getAmount());
+        try {
+            walletLedgeRepository.save(entryDebit);
+            walletLedgeRepository.save(entryCredit);
+        } catch (DataIntegrityViolationException e) {
+            audit.logFailedGeneric(transactionId.toString(), e.getMessage());
+            throw new FailedToSaveLedgeEntry(e.getMessage());
+        }
+    }
+
 }
