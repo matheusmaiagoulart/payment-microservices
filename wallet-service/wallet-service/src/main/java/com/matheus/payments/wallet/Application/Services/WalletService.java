@@ -187,4 +187,27 @@ public class WalletService {
 
         saveProcessedTransaction(pixTransfer.getTransactionId()); // Idempotency
     }
+
+    /**
+     * Methods to build different response types, according to transfer process result
+     *
+     * @param pixTransfer
+     */
+    private InstantPaymentResponse successTransfer(PixTransfer pixTransfer) {
+        audit.logTransferSuccess(pixTransfer.getTransactionId().toString()); // LOG
+        return new InstantPaymentResponse(true, false, pixTransfer.getSenderWallet().getAccountId(), pixTransfer.getReceiverWallet().getAccountId());
+    }
+
+    private InstantPaymentResponse idempotencyError(PixTransfer pixTransfer, TransactionAlreadyProcessed e) {
+        audit.logTransferError(pixTransfer.getTransactionId().toString(), e.getMessage()); // LOG
+        return new InstantPaymentResponse(true, true, pixTransfer.getSenderWallet().getAccountId(), pixTransfer.getReceiverWallet().getAccountId(), e.getMessage());
+    }
+
+    private InstantPaymentResponse failedTransfer(PixTransfer pixTransfer, DomainException e) {
+        audit.logTransferError(pixTransfer.getTransactionId().toString(), e.getMessage()); // LOG
+
+        UUID senderId = pixTransfer.getSenderWallet() != null ? pixTransfer.getSenderWallet().getAccountId() : null;
+        UUID receiverId = pixTransfer.getReceiverWallet() != null ? pixTransfer.getReceiverWallet().getAccountId() : null;
+        return new InstantPaymentResponse(false, false, senderId, receiverId, e.getMessage());
+    }
 }
