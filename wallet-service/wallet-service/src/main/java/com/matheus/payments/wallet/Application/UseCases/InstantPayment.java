@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class WalletService {
+public class InstantPayment {
 
     private final WalletServiceAudit audit;
     private final WalletRepository walletRepository;
@@ -32,7 +32,7 @@ public class WalletService {
     private final WalletLedgeRepository walletLedgeRepository;
     private final TransactionProcessedRepository transactionsProcessed;
 
-    public WalletService(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed, WalletLedgeRepository walletLedgeRepository) {
+    public InstantPayment(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed, WalletLedgeRepository walletLedgeRepository) {
         this.audit = audit;
         this.walletRepository = walletRepository;
         this.pixKeyRepository = pixKeyRepository;
@@ -40,29 +40,6 @@ public class WalletService {
         this.transactionsProcessed = transactionsProcessed;
     }
 
-    @Transactional
-    public boolean createWallet(CreateWalletRequest request) {
-        try {
-            audit.logCreatingWallet(request.keyValue); // LOG
-
-            boolean keyExists = pixKeyRepository.existsWalletKeysByKeyValue(request.keyValue);
-
-            if (keyExists) {
-                audit.logFailedCreateWallet(request.keyValue);
-                throw new PixKeyAlreadyRegisteredException(request.keyValue);
-            }
-
-            Wallet wallet = new Wallet(request.accountType);
-            walletRepository.save(wallet);
-
-            PixKey walletKeys = new PixKey(request.keyValue, request.keyType, wallet.getAccountId());
-            pixKeyRepository.save(walletKeys);
-            return true;
-        } catch (PersistenceException e) {
-            audit.logFailedGeneric("An error occurred while creating the wallet: " + e.getMessage(), request.keyValue);
-            throw new PersistenceException("An error occurred while creating the wallet: " + e.getMessage());
-        }
-    }
 
     @Transactional
     public InstantPaymentResponse transferProcess(TransactionDTO request) {
