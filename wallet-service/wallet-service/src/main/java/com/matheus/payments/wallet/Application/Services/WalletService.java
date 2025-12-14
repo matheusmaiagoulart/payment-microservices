@@ -7,12 +7,10 @@ import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentRespo
 import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.TransactionsProcessed;
 import com.matheus.payments.wallet.Domain.Wallet;
-import com.matheus.payments.wallet.Domain.WalletKeys;
 import com.matheus.payments.wallet.Domain.PixKey;
 import com.matheus.payments.wallet.Domain.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
 import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
-import com.matheus.payments.wallet.Infra.Repository.WalletKeysRepository;
 import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
@@ -39,7 +37,6 @@ public class WalletService {
     public WalletService(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed, WalletLedgeRepository walletLedgeRepository) {
         this.audit = audit;
         this.walletRepository = walletRepository;
-        this.walletKeysRepository = walletKeysRepository;
         this.pixKeyRepository = pixKeyRepository;
         this.walletLedgeRepository = walletLedgeRepository;
         this.transactionsProcessed = transactionsProcessed;
@@ -71,34 +68,15 @@ public class WalletService {
 
     @Transactional
     public InstantPaymentResponse transferProcess(TransactionDTO request) {
+
         audit.logStartingTransferProcess(request.getTransactionId()); // LOG
-
-        WalletKeys accountIdSender = getWalletIdByKey(request.getSenderKey()).orElseThrow(() -> new WalletNotFoundException("Sender"));
-        WalletKeys accountIdReceiver = getWalletIdByKey(request.getReceiverKey()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
-
-        sameUserValidation(accountIdSender.getAccountId(), accountIdReceiver.getAccountId());
-
-        Wallet senderWallet = getWalletById(accountIdSender.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Sender"));
-        Wallet receiverWallet = getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
-
+        PixTransfer pixTransfer = createPixTransfer(request); // Get all necessary data for the transfer
         try {
-            audit.logBalanceValidation(request.getTransactionId()); // LOG
-            var resultValidationBalance = balanceValidation(senderWallet.getBalance(), request.getAmount());
-            if (resultValidationBalance < 0) {
-                throw new InsufficientBalanceException();
-            }
+            checkTransactionAlreadyProcessed(pixTransfer.getTransactionId()); // Idempotency validation
+            transferExecution(pixTransfer);
+            registryLedgeEntries(pixTransfer);
 
-            BigDecimal amount = request.getAmount();
-
-            senderWallet.debitAccount(amount);
-            receiverWallet.creditAccount(amount);
-
-            walletRepository.save(senderWallet);
-            walletRepository.save(receiverWallet);
-
-            saveTransactionProcessed(new TransactionsProcessed(UUID.fromString(request.getTransactionId()))); // Idempotency
-
-            audit.logTransferSuccess(request.getTransactionId()); // LOG
+            return successTransfer(pixTransfer);
         }
         catch (WalletNotFoundException | SameUserException | InsufficientBalanceException | TransactionAlreadyProcessed | DataAccessException e) {
 
@@ -111,9 +89,12 @@ public class WalletService {
             UUID receiverId = receiverWallet != null ? receiverWallet.getAccountId() : null;
 
             return new InstantPaymentResponse(success, senderId, receiverId, e.getMessage());
+        catch (TransactionAlreadyProcessed e) {
+            return idempotencyError(pixTransfer, e);
         }
-
-        return new InstantPaymentResponse(true, senderWallet.getAccountId(), receiverWallet.getAccountId());
+        catch (DomainException e) {
+            return failedTransfer(pixTransfer, e);
+        }
     }
 
     public Optional<Wallet> getWalletById(UUID walletId) {
