@@ -1,8 +1,7 @@
-package com.matheus.payments.wallet.Application.Services;
+package com.matheus.payments.wallet.Application.UseCases;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
-import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.TransactionsProcessed;
@@ -14,7 +13,6 @@ import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedReposito
 import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
-import jakarta.persistence.PersistenceException;
 import org.shared.DTOs.TransactionDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -30,14 +28,14 @@ public class InstantPayment {
     private final WalletRepository walletRepository;
     private final PixKeyRepository pixKeyRepository;
     private final WalletLedgeRepository walletLedgeRepository;
-    private final TransactionProcessedRepository transactionsProcessed;
+    private final TransactionProcessedRepository transactionsProcessedRepository;
 
-    public InstantPayment(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessed, WalletLedgeRepository walletLedgeRepository) {
+    public InstantPayment(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessedRepository, WalletLedgeRepository walletLedgeRepository) {
         this.audit = audit;
         this.walletRepository = walletRepository;
         this.pixKeyRepository = pixKeyRepository;
         this.walletLedgeRepository = walletLedgeRepository;
-        this.transactionsProcessed = transactionsProcessed;
+        this.transactionsProcessedRepository = transactionsProcessedRepository;
     }
 
 
@@ -84,7 +82,7 @@ public class InstantPayment {
      */
     private void saveProcessedTransaction(UUID transactionId) {
         try {
-            transactionsProcessed.save(new TransactionsProcessed(transactionId));
+            transactionsProcessedRepository.save(new TransactionsProcessed(transactionId));
         } catch (DataIntegrityViolationException e) {
             throw new TransactionAlreadyProcessed();
         }
@@ -122,7 +120,7 @@ public class InstantPayment {
      * @throws TransactionAlreadyProcessed
      */
     private void checkTransactionAlreadyProcessed(UUID transactionId) {
-        var result = transactionsProcessed.existsById(transactionId);
+        var result = transactionsProcessedRepository.existsById(transactionId);
         if (result) {
             throw new TransactionAlreadyProcessed();
         }
