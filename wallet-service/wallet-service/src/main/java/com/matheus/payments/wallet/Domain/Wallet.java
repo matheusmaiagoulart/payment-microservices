@@ -1,6 +1,7 @@
 package com.matheus.payments.wallet.Domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,9 +18,14 @@ public class Wallet {
 
     @Id
     private UUID accountId;
+
+    @NotNull
     private BigDecimal balance;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     private accountType accountType;
+
     private Boolean isActive;
     private LocalDateTime createdAt;
 
