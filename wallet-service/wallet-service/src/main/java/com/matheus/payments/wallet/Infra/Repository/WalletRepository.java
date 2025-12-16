@@ -1,6 +1,6 @@
 package com.matheus.payments.wallet.Infra.Repository;
 
-import com.matheus.payments.wallet.Domain.Wallet.Wallet;
+import com.matheus.payments.wallet.Domain.Wallet;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
