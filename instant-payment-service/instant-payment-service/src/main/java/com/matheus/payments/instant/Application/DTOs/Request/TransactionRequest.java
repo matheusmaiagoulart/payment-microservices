@@ -1,25 +1,27 @@
 package com.matheus.payments.instant.Application.DTOs.Request;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.Value;
 
 import java.math.BigDecimal;
 
 @Getter
 public class TransactionRequest {
 
+    @Setter
     private String transactionId;
-    @NotNull(message = "Sender value can't be Null") @NotEmpty(message = "Sender value can't be Empty")
+
+    @NotBlank(message = "Sender value can't be Null or empty")
     private String senderKey;
-    @NotNull(message = "Receiver value can't be Null") @NotEmpty(message = "Receiver value can't be Empty")
+    @NotBlank(message = "Receiver value can't be Null or empty")
     private String receiverKey;
-    @NotNull(message = "Amount value can't be Null") @NotEmpty(message = "Amount value can't be Empty")
+
+    @DecimalMin(value = "0.01", message = "Amount must be positive")
+    @NotNull(message = "Amount value can't be Null")
     private BigDecimal amount;
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
-    }
 }
 
 
