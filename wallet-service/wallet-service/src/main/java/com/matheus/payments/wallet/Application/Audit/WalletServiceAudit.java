@@ -47,5 +47,26 @@ public class WalletServiceAudit {
     }
 
 
+    // Create Wallet Logs
+
+    public void logCreatingWallet(String keyValue) {
+        log.info("Creating wallet for user: " + keyValue,
+                LogBuilder.serviceLog("/wallets/instant-payment", MICROSERVICE_NAME, null, CLASS_NAME, METHOD_NAME,
+                        "create.wallet.process.start"));
+    }
+
+    public void logFailedCreateWallet(String keyValue) {
+        log.info("The key value already exists: " + keyValue,
+                LogBuilder.serviceLog("/wallets/instant-payment", MICROSERVICE_NAME, null, CLASS_NAME, METHOD_NAME,
+                        "create.wallet.process.failed"));
+    }
+
+    public void logFailedGeneric(String keyValue, String message) {
+        log.info(message + keyValue,
+                LogBuilder.serviceLog("/wallets/instant-payment", MICROSERVICE_NAME, null, CLASS_NAME, METHOD_NAME,
+                        "create.wallet.process.failed"));
+    }
+
+
 
 }
