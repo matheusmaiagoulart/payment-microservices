@@ -1,14 +1,13 @@
-package com.matheus.payments.instant.Application.Services;
+package com.matheus.payments.instant.Application.UseCases;
 
 import com.matheus.payments.instant.Application.Audit.PaymentProcessorAudit;
-import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Domain.Transaction;
 import com.matheus.payments.instant.Domain.TransactionOutbox;
 import com.matheus.payments.instant.Infra.Exceptions.Custom.*;
 import com.matheus.payments.instant.Infra.Http.WalletServer;
 import com.matheus.payments.instant.Infra.Repository.OutboxRepository;
 import com.matheus.payments.instant.Infra.Repository.TransactionRepository;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.shared.DTOs.PaymentProcessorResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -66,6 +65,12 @@ public class PaymentProcessorService {
             throw new FailedToSentException(response.getFailedMessage());
         }
 
+        if(response.isAlreadyProcessed()){
+            audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
+            audit.logReceivedSuccessResponse(transaction.getTransactionId().toString()); // LOG
+            return PaymentProcessorResponse.responseAlreadyProcessed(transaction.getTransactionId(), transaction.getSenderAccountId(), transaction.getReceiverAccountId(), transaction.getTimestamp());
+        }
+
         if (!response.getIsSuccessful()) {
             audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
             audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
@@ -91,7 +96,7 @@ public class PaymentProcessorService {
     }
 
     private void ensureNotAlreadySent(TransactionOutbox transaction) throws TransactionAlreadySentException {
-        if (transaction.getSent()) {
+         if (transaction.getSent()) {
             throw new TransactionAlreadySentException("Transaction with ID " + transaction.getTransactionId() + " has already been sent.");
         }
     }
