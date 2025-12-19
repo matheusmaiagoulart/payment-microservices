@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.OPTIMISTIC)
     @Query("SELECT w FROM Wallet w WHERE w.accountId = :userId and w.isActive = true")
     Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId);
 }

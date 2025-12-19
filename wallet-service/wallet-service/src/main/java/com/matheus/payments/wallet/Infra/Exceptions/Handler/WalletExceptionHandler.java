@@ -51,4 +51,10 @@ public class WalletExceptionHandler {
         HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.BAD_REQUEST , invalidAmountException.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handlerMessage);
     }
+
+    @ExceptionHandler(ConcurrentTransactionException.class)
+    public ResponseEntity<HandlerMessage> InvalidAmountException(ConcurrentTransactionException concurrentTransactionException) {
+        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.INTERNAL_SERVER_ERROR, concurrentTransactionException.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(handlerMessage);
+    }
 }

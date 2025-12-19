@@ -2,6 +2,7 @@ package com.matheus.payments.wallet.Application.UseCases;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
+import com.matheus.payments.wallet.Application.DTOs.Context.WalletTransfer;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.TransactionsProcessed;
@@ -15,6 +16,9 @@ import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import org.shared.DTOs.TransactionDTO;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,11 +49,15 @@ public class InstantPayment {
         audit.logStartingTransferProcess(request.getTransactionId()); // LOG
         PixTransfer pixTransfer = createPixTransfer(request); // Get all necessary data for the transfer
         try {
-            checkTransactionAlreadyProcessed(pixTransfer.getTransactionId()); // Idempotency validation
-            transferExecution(pixTransfer);
+            checkTransactionAlreadyProcessed(UUID.fromString(request.getTransactionId())); // Idempotency validation
+            transferExecutionWithRetry(pixTransfer);
             registryLedgeEntries(pixTransfer);
 
             return successTransfer(pixTransfer);
+        }
+        catch (OptimisticLockingFailureException e) {
+        audit.logFailedGeneric(pixTransfer.getTransactionId().toString(), "Max retry attempts reached for transaction due to concurrent updates.");
+            return failedTransfer(pixTransfer, new ConcurrentTransactionException());
         }
         catch (TransactionAlreadyProcessed e) {
             return idempotencyError(pixTransfer, e);
@@ -58,6 +66,7 @@ public class InstantPayment {
             return failedTransfer(pixTransfer, e);
         }
     }
+
 
     public Optional<Wallet> getWalletById(UUID walletId) {
         return walletRepository.findByAccountIdAndIsActiveTrue(walletId);
@@ -95,6 +104,7 @@ public class InstantPayment {
      * @throws FailedToSaveLedgeEntry
      */
     private void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
+
         UUID transactionId = pixTransfer.getTransactionId();
         UUID senderWalletId = pixTransfer.getSenderPixKey().getAccountId();
         UUID receiverWalletId = pixTransfer.getReceiverPixKey().getAccountId();
@@ -140,20 +150,38 @@ public class InstantPayment {
 
         return new PixTransfer(request.getTransactionId(), senderWallet, receiverWallet, accountIdSender, accountIdReceiver, request.getAmount());
     }
+    /**
+     * This method execute the transfer between wallets, with retry mechanism for Optimistic Locking exceptions.
+     *
+     * @param pixTransfer Data transfer context
+     */
+    @Retryable(retryFor = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Transactional
+    public void transferExecutionWithRetry(PixTransfer pixTransfer) {
 
-    private void transferExecution(PixTransfer pixTransfer) {
-        sameUserValidation(pixTransfer.getSenderPixKey().getAccountId(), pixTransfer.getReceiverPixKey().getAccountId());
+        sameUserValidation(
+                pixTransfer.getSenderPixKey().getAccountId(),
+                pixTransfer.getReceiverPixKey().getAccountId()
+        );
 
-        audit.logBalanceValidation(pixTransfer.getTransactionId().toString()); // LOG
+        audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
-        // Sufficient balance validation is done inside debitAccount method
-        pixTransfer.getSenderWallet().debitAccount(pixTransfer.getAmount());
-        pixTransfer.getReceiverWallet().creditAccount(pixTransfer.getAmount());
+        Wallet senderWallet = getWalletById(pixTransfer.getSenderPixKey().getAccountId())
+                .orElseThrow(() -> new WalletNotFoundException("Sender"));
 
-        walletRepository.save(pixTransfer.getSenderWallet());
-        walletRepository.save(pixTransfer.getReceiverWallet());
+        Wallet receiverWallet = getWalletById(pixTransfer.getReceiverPixKey().getAccountId())
+                .orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
-        saveProcessedTransaction(pixTransfer.getTransactionId()); // Idempotency
+        WalletTransfer walletTransfer =
+                new WalletTransfer(senderWallet, receiverWallet, pixTransfer.getAmount()); // Created again to ensure latest data from DB
+
+        walletTransfer.getSenderWallet().debitAccount(walletTransfer.getAmount());
+        walletTransfer.getReceiverWallet().creditAccount(walletTransfer.getAmount());
+
+        walletRepository.save(walletTransfer.getSenderWallet());
+        walletRepository.save(walletTransfer.getReceiverWallet());
+
+        saveProcessedTransaction(pixTransfer.getTransactionId());
     }
 
     /**
@@ -171,7 +199,7 @@ public class InstantPayment {
         return new InstantPaymentResponse(true, true, pixTransfer.getSenderWallet().getAccountId(), pixTransfer.getReceiverWallet().getAccountId(), e.getMessage());
     }
 
-    private InstantPaymentResponse failedTransfer(PixTransfer pixTransfer, DomainException e) {
+    private InstantPaymentResponse failedTransfer(PixTransfer pixTransfer, Exception e) {
         audit.logTransferError(pixTransfer.getTransactionId().toString(), e.getMessage()); // LOG
 
         UUID senderId = pixTransfer.getSenderWallet() != null ? pixTransfer.getSenderWallet().getAccountId() : null;
