@@ -1,0 +1,2 @@
+ALTER TABLE wallets
+ADD version INT NOT NULL DEFAULT 1;

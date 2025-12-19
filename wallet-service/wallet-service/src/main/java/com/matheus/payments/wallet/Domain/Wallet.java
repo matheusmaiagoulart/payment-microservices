@@ -31,6 +31,9 @@ public class Wallet {
     private Boolean isActive;
     private LocalDateTime createdAt;
 
+    @Version
+    private Integer version;
+
     public Wallet(accountType accountType) {
         this.accountId = UUID.randomUUID();
         this.balance = BigDecimal.ZERO;
