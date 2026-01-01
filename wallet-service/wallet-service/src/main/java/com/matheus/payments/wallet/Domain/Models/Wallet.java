@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Domain;
+package com.matheus.payments.wallet.Domain.Models;
 
 import com.matheus.payments.wallet.Domain.Exceptions.InsufficientBalanceException;
 import com.matheus.payments.wallet.Domain.Exceptions.InvalidAmountException;
@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.shared.Domain.accountType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

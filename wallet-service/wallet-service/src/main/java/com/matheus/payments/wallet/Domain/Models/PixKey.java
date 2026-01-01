@@ -1,8 +1,9 @@
-package com.matheus.payments.wallet.Domain;
+package com.matheus.payments.wallet.Domain.Models;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.shared.Domain.keyType;
 
 import java.util.UUID;
 

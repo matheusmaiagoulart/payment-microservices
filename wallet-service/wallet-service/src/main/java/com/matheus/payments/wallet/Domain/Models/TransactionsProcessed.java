@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Domain;
+package com.matheus.payments.wallet.Domain.Models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
