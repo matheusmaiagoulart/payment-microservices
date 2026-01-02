@@ -1,4 +1,4 @@
-package com.matheus.payments.user_service.Domain;
+package com.matheus.payments.user_service.Domain.Models;
 
 
 import com.matheus.payments.user_service.Domain.Exceptios.InvalidCpfException;
