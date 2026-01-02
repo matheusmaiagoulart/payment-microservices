@@ -1,29 +1,28 @@
 package com.matheus.payments.wallet.Application.DTOs.Request;
 
-import com.matheus.payments.wallet.Domain.accountType;
-import com.matheus.payments.wallet.Domain.keyType;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
+import org.shared.Domain.accountType;
+import org.shared.Domain.keyType;
 
-@Component
+import java.util.UUID;
+
+@NoArgsConstructor
 @Getter @Setter
 public class CreateWalletRequest {
 
-    @NotNull
-    @NotEmpty
-    public String keyValue;
 
-    @NotNull
-    @NotEmpty
-    public keyType keyType;
+    @JsonProperty("id")
+    private UUID accountId;
 
-    @NotNull
-    @NotEmpty
-    @Enumerated(EnumType.STRING)
-    public accountType accountType;
+    @JsonProperty("cpf")
+    private String keyValue;
+
+    @JsonProperty("type")
+    private keyType keyType;
+
+    @JsonProperty("accountType")
+    private accountType accountType;
 }
