@@ -1,6 +1,6 @@
 package com.matheus.payments.wallet.Application.DTOs.Context;
 
-import com.matheus.payments.wallet.Domain.Wallet;
+import com.matheus.payments.wallet.Domain.Models.Wallet;
 import lombok.Getter;
 
 import java.math.BigDecimal;
