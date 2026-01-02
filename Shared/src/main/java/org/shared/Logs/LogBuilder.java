@@ -16,6 +16,18 @@ public class LogBuilder {
         };
     }
 
+    public static Object[] eventLog(String event, String topic, String MS, String keyValue, String className, String methodName, String message) {
+        return new Object[]{
+                kv("event_type", event),
+                kv("topic_listened", topic),
+                kv("key_value", keyValue),
+                kv("service_name", MS),
+                kv("class", className),
+                kv("method", methodName),
+                kv("event", message)
+        };
+    }
+
     public static Object[] requestLog(String httpMethod, String endpoint, String MS, String transactionId, String className, String methodName, Object... additionalKVs) {
         var objBase = new Object[]{
                 kv("http_method", httpMethod),

@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Domain;
+package org.shared.Domain;
 
 public enum keyType {
     CPF,
