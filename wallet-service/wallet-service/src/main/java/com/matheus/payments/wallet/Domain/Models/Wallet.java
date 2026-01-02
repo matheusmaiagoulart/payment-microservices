@@ -35,8 +35,8 @@ public class Wallet {
     @Version
     private Integer version;
 
-    public Wallet(accountType accountType) {
-        this.accountId = UUID.randomUUID();
+    public Wallet(UUID accountId, accountType accountType) {
+        this.accountId = accountId;
         this.balance = BigDecimal.ZERO;
         this.accountType = accountType;
         this.isActive = true;
