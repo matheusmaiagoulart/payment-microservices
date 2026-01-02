@@ -1,7 +1,7 @@
 package com.matheus.payments.wallet.Application.DTOs.Context;
 
-import com.matheus.payments.wallet.Domain.Wallet;
-import com.matheus.payments.wallet.Domain.PixKey;
+import com.matheus.payments.wallet.Domain.Models.Wallet;
+import com.matheus.payments.wallet.Domain.Models.PixKey;
 import lombok.Getter;
 import lombok.Setter;
 
