@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.matheus.payments</groupId>
-	<artifactId>instant-payment-service</artifactId>
+	<artifactId>MS-InstantPayment</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Instant Payment Service</name>
 	<description>Service responsable for Intant Payments</description>
