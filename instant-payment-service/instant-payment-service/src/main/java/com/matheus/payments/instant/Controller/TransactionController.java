@@ -1,10 +1,11 @@
 package com.matheus.payments.instant.Controller;
 
-import com.matheus.payments.instant.Application.DTOs.Response.PaymentProcessorResponse;
 import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
 import com.matheus.payments.instant.Application.Facades.InstantPaymentFacade;
 import com.matheus.payments.instant.Application.Services.StatementService;
 import com.matheus.payments.instant.Domain.Transaction;
+import jakarta.validation.Valid;
+import org.shared.DTOs.PaymentProcessorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class TransactionController {
     }
 
     @PostMapping("/pix")
-    public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@RequestBody TransactionRequest request) throws IOException {
+    public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@Valid @RequestBody TransactionRequest request) throws IOException {
 
         PaymentProcessorResponse paymentOrchestration = paymentService.paymentOrchestration(request);
         return ResponseEntity.ok(paymentOrchestration);
