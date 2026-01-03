@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/promtail.yaml
+      - ./instant-payment-service/logs:/app/instant-payment-service/logs
+      - ./wallet-service/logs:/app/wallet-service/logs
+      - .user-service/logs:/app/user-service/logs
+    command: -config.file=/etc/promtail/promtail.yaml
+    networks:
+      - loki
+
+
+  grafana:
+      image: grafana/grafana:10.3.0
+      container_name: grafana
+      ports:
+        - "3000:3000"
+      depends_on:
+        - loki
+      networks:
+      - loki
+
+volumes:
+  loki-data:
+  grafana-data:
+
+
+networks:
+  loki:
+    driver: bridge

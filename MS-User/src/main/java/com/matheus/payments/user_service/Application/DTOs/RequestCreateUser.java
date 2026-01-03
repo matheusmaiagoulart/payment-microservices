@@ -23,7 +23,7 @@ public class RequestCreateUser {
     private String email;
 
     @NotBlank
-    @CPF
+    //@CPF
     @Size(min=11, max=11, message = "CPF must be 11 digits")
     private String cpf;
 
