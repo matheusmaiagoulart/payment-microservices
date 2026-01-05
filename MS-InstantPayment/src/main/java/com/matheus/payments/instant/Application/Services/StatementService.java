@@ -26,6 +26,4 @@ public class StatementService {
         return transactionRepository.findTransactionsBySenderAccountIdOrReceiverAccountId(accountId, accountId)
                 .orElseThrow(() -> new RuntimeException("No transactions found for accountId: " + accountId));
     }
-
-
 }
