@@ -40,12 +40,21 @@ public class OutboxScheduler {
         try {
             UserCreatedEvent userCreatedEvent = objectMapper.readValue(outbox.getPayload(), UserCreatedEvent.class);
             publisher.publisher(userCreatedEvent);
-            outbox.setSent(true);
-            outboxRepository.save(outbox);
+            setOutboxSent(outbox);
         } catch (Exception e) {
-            outbox.setFailed(true);
-            outbox.setFailureReason(e.getMessage());
+            setOutboxFailed(outbox, e.getMessage());
             outboxRepository.save(outbox);
         }
+    }
+
+    public void setOutboxSent(Outbox outbox) {
+        outbox.setSent(true);
+        outboxRepository.save(outbox);
+    }
+
+    public void setOutboxFailed(Outbox outbox, String errorMessage) {
+        outbox.setFailed(true);
+        outbox.setFailureReason(errorMessage);
+        outboxRepository.save(outbox);
     }
 }
