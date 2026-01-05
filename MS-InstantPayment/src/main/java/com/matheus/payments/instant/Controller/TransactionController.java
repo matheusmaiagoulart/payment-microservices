@@ -1,6 +1,6 @@
 package com.matheus.payments.instant.Controller;
 
-import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
+import com.matheus.payments.instant.Application.DTOs.TransactionRequest;
 import com.matheus.payments.instant.Application.Facades.InstantPaymentFacade;
 import com.matheus.payments.instant.Application.Services.StatementService;
 import com.matheus.payments.instant.Domain.Transaction;

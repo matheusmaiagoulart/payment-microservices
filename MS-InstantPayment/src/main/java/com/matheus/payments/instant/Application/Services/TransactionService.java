@@ -1,7 +1,7 @@
 package com.matheus.payments.instant.Application.Services;
 
 import com.matheus.payments.instant.Application.Audit.TransactionServiceAudit;
-import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
+import com.matheus.payments.instant.Application.DTOs.TransactionRequest;
 import com.matheus.payments.instant.Application.Mappers.TransactionMapper;
 import com.matheus.payments.instant.Domain.Transaction;
 import com.matheus.payments.instant.Infra.Exceptions.Custom.DataBaseException;
