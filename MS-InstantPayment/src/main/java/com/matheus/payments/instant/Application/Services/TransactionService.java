@@ -37,7 +37,6 @@ public class TransactionService {
     }
 
     public String createPaymentProcess(TransactionRequest request) {
-
         try {
             // Create Transaction Entity
             Transaction transaction = transactionMappers.mapToEntity(request);
@@ -52,6 +51,5 @@ public class TransactionService {
             audit.logErrorCreateTransaction(e.getMessage());
             throw new DataBaseException("An error occurred while saving Transaction for request: " + request.toString());
         }
-
     }
 }
