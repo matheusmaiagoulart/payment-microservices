@@ -1,4 +1,4 @@
-package com.matheus.payments.instant.Application.DTOs.Request;
+package com.matheus.payments.instant.Application.DTOs;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 
 @Getter
 public class TransactionRequest {
-
     @Setter
     private String transactionId;
 
@@ -21,7 +20,6 @@ public class TransactionRequest {
     @DecimalMin(value = "0.01", message = "Amount must be positive")
     @NotNull(message = "Amount value can't be Null")
     private BigDecimal amount;
-
 }
 
 
