@@ -175,11 +175,11 @@ public class InstantPayment {
         WalletTransfer walletTransfer =
                 new WalletTransfer(senderWallet, receiverWallet, pixTransfer.getAmount()); // Created again to ensure latest data from DB
 
-        walletTransfer.getSenderWallet().debitAccount(walletTransfer.getAmount());
-        walletTransfer.getReceiverWallet().creditAccount(walletTransfer.getAmount());
+        walletTransfer.senderWallet().debitAccount(walletTransfer.amount());
+        walletTransfer.receiverWallet().creditAccount(walletTransfer.amount());
 
-        walletRepository.save(walletTransfer.getSenderWallet());
-        walletRepository.save(walletTransfer.getReceiverWallet());
+        walletRepository.save(walletTransfer.senderWallet());
+        walletRepository.save(walletTransfer.receiverWallet());
 
         saveProcessedTransaction(pixTransfer.getTransactionId());
     }
