@@ -1,6 +1,6 @@
 package com.matheus.payments.wallet.Api.Controller;
 
-import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
+import com.matheus.payments.wallet.Domain.Events.UserCreatedEvent;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
 import com.matheus.payments.wallet.Application.UseCases.CreateWallet;
 import com.matheus.payments.wallet.Application.UseCases.InstantPayment;
@@ -25,7 +25,7 @@ public class WalletController {
     }
 
     @PostMapping("/createAccount")
-    public ResponseEntity<String> createWallet(@RequestBody CreateWalletRequest request) {
+    public ResponseEntity<String> createWallet(@RequestBody UserCreatedEvent request) {
 
         var result = createWallet.createWallet(request);
 

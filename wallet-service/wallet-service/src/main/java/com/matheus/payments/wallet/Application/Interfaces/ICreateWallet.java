@@ -1,7 +1,7 @@
 package com.matheus.payments.wallet.Application.Interfaces;
 
-import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
+import com.matheus.payments.wallet.Domain.Events.UserCreatedEvent;
 
 public interface ICreateWallet {
-    boolean createWallet(CreateWalletRequest request);
+    boolean createWallet(UserCreatedEvent request);
 }

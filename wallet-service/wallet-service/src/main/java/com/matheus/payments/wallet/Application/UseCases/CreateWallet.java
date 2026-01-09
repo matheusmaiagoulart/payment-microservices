@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.UseCases;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
-import com.matheus.payments.wallet.Application.DTOs.Request.CreateWalletRequest;
+import com.matheus.payments.wallet.Domain.Events.UserCreatedEvent;
 import com.matheus.payments.wallet.Application.Interfaces.ICreateWallet;
 import com.matheus.payments.wallet.Domain.Exceptions.PixKeyAlreadyRegisteredException;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
@@ -30,7 +30,7 @@ public class CreateWallet implements ICreateWallet {
     }
 
     @Transactional
-    public boolean createWallet(CreateWalletRequest request) {
+    public boolean createWallet(UserCreatedEvent request) {
         try {
             audit.logCreatingWallet(request.getKeyValue()); // LOG
 
