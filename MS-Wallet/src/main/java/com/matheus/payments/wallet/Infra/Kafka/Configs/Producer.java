@@ -1,5 +1,6 @@
-package com.matheus.payments.wallet.Infra.Kafka;
+package com.matheus.payments.wallet.Infra.Kafka.Configs;
 
+import com.matheus.payments.wallet.utils.KafkaTopics;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -25,7 +26,7 @@ public class Producer {
     }
 
     @Bean
-    public ProducerFactory<String, Object> producerFactory()
+    public ProducerFactory<String, String> producerFactory()
     {
         Map<String, Object> properties = kafkaProperties .buildProducerProperties();
 
@@ -38,13 +39,13 @@ public class Producer {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate() {
+    public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     public NewTopic WalletCreated() {
         return TopicBuilder
-                .name("WalletCreated")
+                .name(KafkaTopics.WALLET_CREATED_EVENT_TOPIC)
                 .partitions(1) //numero de consumidores que podem ler o topico em paralelo
                 .replicas(1)
                 .config("retention.ms", "604800000") //7 dias em milisegundos
@@ -53,7 +54,7 @@ public class Producer {
 
     public NewTopic WalletCreationFailed() {
         return TopicBuilder
-                .name("WalletCreationFailed")
+                .name(KafkaTopics.WALLET_CREATION_FAILED_TOPIC)
                 .partitions(1) //numero de consumidores que podem ler o topico em paralelo
                 .replicas(1)
                 .config("retention.ms", "604800000") //7 dias em milisegundos

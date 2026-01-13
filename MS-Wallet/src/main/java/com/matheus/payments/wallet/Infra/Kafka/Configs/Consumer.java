@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Infra.Kafka;
+package com.matheus.payments.wallet.Infra.Kafka.Configs;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +7,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +39,13 @@ public class Consumer {
         // Configura o ACK manual após processamento bem-sucedido
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         factory.setConsumerFactory(consumerFactory());
+
+
+        factory.setCommonErrorHandler(
+                new DefaultErrorHandler(
+                        new FixedBackOff(5000L, 3L) // 5 segundos de intervalo, 3 tentativas
+                )
+        );
 
         return factory;
     }
