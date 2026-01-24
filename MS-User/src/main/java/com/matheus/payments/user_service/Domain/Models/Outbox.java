@@ -23,9 +23,11 @@ public class Outbox {
 
     private UUID userId;
     private String eventType;
+    private String topic;
 
     @Column(columnDefinition = "json")
     private String payload;
+    private UUID correlationId;
     private boolean isSent;
     private boolean isFailed;
     private String failureReason;
@@ -33,10 +35,12 @@ public class Outbox {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Outbox(UUID userId, String eventType, String payload) {
+    public Outbox(UUID userId, String eventType, String topic, String payload, String correlationId) {
         this.id = UUID.randomUUID();
+        this.correlationId = UUID.fromString(correlationId);
         this.userId = userId;
         this.eventType = eventType;
+        this.topic = topic;
         this.payload = payload;
         this.isSent = false;
         this.isFailed = false;
