@@ -1,5 +1,6 @@
-package com.matheus.payments.user_service.Infra.Kafka;
+package com.matheus.payments.user_service.Infra.Kafka.Config;
 
+import com.matheus.payments.user_service.Utils.KafkaTopics;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -15,16 +16,16 @@ import org.springframework.kafka.core.ProducerFactory;
 import java.util.Map;
 @Configuration
 @EnableKafka
-public class KafkaConfiguration {
+public class Producer {
 
     private final KafkaProperties kafkaProperties;
 
-    public KafkaConfiguration(KafkaProperties kafkaProperties) {
+    public Producer(KafkaProperties kafkaProperties) {
         this.kafkaProperties = kafkaProperties;
     }
 
     @Bean
-    public ProducerFactory<String, Object> producerFactory()
+    public ProducerFactory<String, String> producerFactory()
     {
         Map<String, Object> properties = kafkaProperties .buildProducerProperties();
 
@@ -37,14 +38,14 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate() {
+    public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
     public NewTopic UserCreated() {
         return TopicBuilder
-                .name("UserCreated")
+                .name(KafkaTopics.USER_CREATED)
                 .partitions(1) //numero de consumidores que podem ler o topico em paralelo
                 .replicas(1)
                 .config("retention.ms", "604800000") //7 dias em milisegundos
