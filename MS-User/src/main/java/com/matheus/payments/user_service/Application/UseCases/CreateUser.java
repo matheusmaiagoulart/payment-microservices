@@ -1,12 +1,10 @@
 package com.matheus.payments.user_service.Application.UseCases;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.matheus.payments.user_service.Application.Audit.CreateUserAudit;
-import tools.jackson.databind.ObjectMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import com.matheus.payments.user_service.Application.DTOs.RequestCreateUser;
 import com.matheus.payments.user_service.Domain.Events.UserCreatedEvent;
 import com.matheus.payments.user_service.Domain.Exceptios.*;
-import com.matheus.payments.user_service.Domain.Models.Outbox;
 import com.matheus.payments.user_service.Domain.Models.User;
 import com.matheus.payments.user_service.Infra.Repository.OutboxRepository;
 import com.matheus.payments.user_service.Infra.Repository.UserRepository;
@@ -18,15 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CreateUser {
 
-    private final ObjectMapper mapper;
     private final CreateUserAudit audit;
     private final UserRepository userRepository;
     private final OutboxRepository outboxRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CreateUser(ObjectMapper mapper, UserRepository userRepository, OutboxRepository outboxRepository, CreateUserAudit audit) {
+    public CreateUser(UserRepository userRepository, OutboxRepository outboxRepository, CreateUserAudit audit, ApplicationEventPublisher eventPublisher) {
         this.audit = audit;
-        this.mapper = mapper;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
         this.outboxRepository = outboxRepository;
     }
 
@@ -48,15 +46,11 @@ public class CreateUser {
             userRepository.saveAndFlush(user);
 
             UserCreatedEvent userCreatedEvent = new UserCreatedEvent(user.getId(), user.getCpf(), user.getAccountType());
-            String payload = mapper.writeValueAsString(userCreatedEvent);
-
-            Outbox outbox = new Outbox(user.getId(), userCreatedEvent.getTopic(), payload);
-            outboxRepository.saveAndFlush(outbox);
+            eventPublisher.publishEvent(userCreatedEvent);
 
             audit.logUserCreationSuccess(data.getCpf());
             return "Congrats! Your request to create a account has been received and is being processed. You will receive a confirmation email shortly.";
-        }
-        catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             audit.logUserCreationFailed(data.getCpf(), "Unique field violation: " + e.getMessage());
             throw handleUniqueFieldException(e);
         }
@@ -66,9 +60,15 @@ public class CreateUser {
     public RuntimeException handleUniqueFieldException(DataIntegrityViolationException e) throws PhoneNumberAlreadyExistsException, CpfAlreadyExistsException, EmailAlreadyExists, UniqueFieldsEntryViolationException {
         var error = e.getCause().getMessage();
 
-        if(error.contains("uk_users_phone_number")){ throw new PhoneNumberAlreadyExistsException(); }
-        if(error.contains("uk_users_cpf")){ throw new CpfAlreadyExistsException(); }
-        if(error.contains("uk_users_email")){ throw new EmailAlreadyExists(); }
+        if (error.contains("uk_users_phone_number")) {
+            throw new PhoneNumberAlreadyExistsException();
+        }
+        if (error.contains("uk_users_cpf")) {
+            throw new CpfAlreadyExistsException();
+        }
+        if (error.contains("uk_users_email")) {
+            throw new EmailAlreadyExists();
+        }
 
         return new UniqueFieldsEntryViolationException("Unique field violation: " + e.getMessage());
     }
