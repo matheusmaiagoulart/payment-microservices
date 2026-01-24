@@ -73,4 +73,9 @@ public class User {
         }
         return cpf;
     }
+
+    public void activateUser() {
+        this.active = true;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
