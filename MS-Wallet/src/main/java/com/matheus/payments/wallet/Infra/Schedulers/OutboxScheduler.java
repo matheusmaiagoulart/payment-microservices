@@ -1,7 +1,6 @@
 package com.matheus.payments.wallet.Infra.Schedulers;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
 import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -12,6 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * This Scheduler is responsible for get all pending Outbox events and send them to respective Kafka Topics.
+ *
+ * @author Matheus Maia Goulart
+ */
 @Service
 public class OutboxScheduler {
 
@@ -25,20 +29,15 @@ public class OutboxScheduler {
 
     @Scheduled(fixedDelay = 10000)
     public void sendToCreateWallet() {
-
-        List<Outbox> pendingToSend;
-
-        pendingToSend = outboxRepository.findAllBySentFalse();
+        List<Outbox> pendingToSend = outboxRepository.findAllBySentFalse();
         pendingToSend.forEach(outbox -> sendOutboxEvent(outbox));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW) // Always create a new transaction for each outbox event
     public void sendOutboxEvent(Outbox outbox) {
         try {
-
             publisher.send(outbox.getTopic(), outbox.getPayload());
             setOutboxSent(outbox);
-            System.out.println("enviadoooo");
         } catch (Exception e) {
             setOutboxFailed(outbox, e.getMessage());
             outboxRepository.save(outbox);
