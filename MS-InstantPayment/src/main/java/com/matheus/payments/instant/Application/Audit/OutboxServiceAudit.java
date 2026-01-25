@@ -1,8 +1,11 @@
 package com.matheus.payments.instant.Application.Audit;
 
+import com.matheus.payments.instant.Utils.ApplicationData;
 import lombok.extern.slf4j.Slf4j;
 import org.shared.Logs.LogBuilder;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
@@ -11,17 +14,29 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 public class OutboxServiceAudit {
 
     public static final String REQUEST_FROM = "/transaction/pix";
-    public static final String MICROSERVICE_NAME = "Instant-Payment-Service";
     public static final String CLASS_NAME = "OutboxService";
 
+
     public void logCreateOutbox(String transactionId) {
-        log.info("Creating TransactionOutbox", LogBuilder.serviceLog(REQUEST_FROM, MICROSERVICE_NAME,
-                transactionId, CLASS_NAME, "createOutboxEntry", "Payment processing started"));
+        ArrayList<Object> logData = new ArrayList<>();
+
+        logData.addAll(LogBuilder.baseLog(ApplicationData.SERVICE_NAME, CorrelationId.get(), CLASS_NAME, "createOutboxEntry", "Payment processing started"));
+        logData.addAll(LogBuilder.requestLog("POST", REQUEST_FROM));
+        logData.add(kv("event", "outbox.creation.starting"));
+        logData.add(kv("transactionId", transactionId));
+
+        log.info("Creating TransactionOutbox", logData.toArray());
     }
 
     public void logErrorCreateOutbox(String transactionId, String errorMessage) {
-        log.error("Error to create Outbox Entry", LogBuilder.serviceLog(REQUEST_FROM, MICROSERVICE_NAME,
-                        transactionId, CLASS_NAME, "createOutboxEntry", "Payment processing failed"),
-                kv("errorMessage", errorMessage));
+        ArrayList<Object> logData = new ArrayList<>();
+
+        logData.addAll(LogBuilder.baseLog(ApplicationData.SERVICE_NAME, CorrelationId.get(), CLASS_NAME, "createOutboxEntry", "Payment processing failed"));
+        logData.addAll(LogBuilder.requestLog("POST", REQUEST_FROM));
+        logData.add(kv("event", "outbox.creation.failed"));
+        logData.add(kv("transactionId", transactionId));
+        logData.add(kv("errorMessage", errorMessage));
+
+        log.error("Error creating Outbox Entry", logData.toArray());
     }
 }
