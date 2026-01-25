@@ -1,6 +1,7 @@
 package com.matheus.payments.instant.Infra.Http;
 
 
+import com.matheus.payments.instant.Application.Audit.CorrelationId;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -55,6 +56,7 @@ public class WalletServer {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://localhost:8081/wallets/instant-payment"))
                 .header("Content-Type", "application/json")
+                .header("X-Correlation-Id", CorrelationId.get())
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .timeout(Duration.ofSeconds(30)) // Setting a request timeout
                 .build();
