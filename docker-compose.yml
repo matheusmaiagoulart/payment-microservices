@@ -37,9 +37,9 @@ services:
     container_name: promtail
     volumes:
       - ./promtail-config.yaml:/etc/promtail/promtail.yaml
-      - ./instant-payment-service/logs:/app/instant-payment-service/logs
-      - ./wallet-service/logs:/app/wallet-service/logs
-      - .user-service/logs:/app/user-service/logs
+      - ./MS-InstantPayment/logs:/app/MS-InstantPayment/logs
+      - ./MS-Wallet/logs:/app/MS-Wallet/logs
+      - ./MS-User/logs:/app/MS-User/logs
     command: -config.file=/etc/promtail/promtail.yaml
     networks:
       - loki

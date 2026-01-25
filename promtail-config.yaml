@@ -9,16 +9,24 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: instant-payment-service
+  - job_name: MS-InstantPayment
     static_configs:
       - targets: [localhost]
         labels:
-          job: instant-payment-service
-          __path__: /app/instant-payment-service/logs/*.log
+          job: MS-InstantPayment
+          __path__: /app/MS-InstantPayment/logs/*.log
 
-  - job_name: wallet-service
+  - job_name: MS-Wallet
     static_configs:
       - targets: [localhost]
         labels:
-          job: wallet-service
-          __path__: /app/wallet-service/logs/*.log
+          job: MS-Wallet
+          __path__: /app/MS-Wallet/logs/*.log
+
+
+  - job_name: MS-User
+    static_configs:
+      - targets: [ localhost ]
+        labels:
+          job: MS-User
+          __path__: /app/MS-User/logs/*.log
