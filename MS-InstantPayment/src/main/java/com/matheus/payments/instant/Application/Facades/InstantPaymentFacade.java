@@ -2,7 +2,7 @@ package com.matheus.payments.instant.Application.Facades;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.instant.Application.Audit.InstantPaymentFacadeAudit;
-import com.matheus.payments.instant.Application.DTOs.Request.TransactionRequest;
+import com.matheus.payments.instant.Application.DTOs.TransactionRequest;
 import com.matheus.payments.instant.Application.Services.OutboxService;
 import com.matheus.payments.instant.Application.UseCases.PaymentProcessorService;
 import com.matheus.payments.instant.Application.Services.TransactionService;
@@ -43,26 +43,23 @@ public class InstantPaymentFacade {
 
     public PaymentProcessorResponse paymentOrchestration(TransactionRequest request) throws IOException {
 
-        // Create the payment process to generate transactionID
-        String transactionId = transactionService.createPaymentProcess(request);
-        request.setTransactionId(transactionId);
+            String transactionId = transactionService.createPaymentProcess(request);
+            request.setTransactionId(transactionId);
 
-        // Create Outbox Entry
-        outboxService.createOutboxEntry(transactionId, objectMapper.writeValueAsString(request));
+            // Create Outbox Entry
+            outboxService.createOutboxEntry(transactionId, objectMapper.writeValueAsString(request));
 
-        audit.logPaymentProcessStarting(transactionId); // LOG
+            audit.logPaymentProcessStarting(transactionId); // LOG
 
-        // Send payment to processor (Wallet Server)
-        String processorResponseJson = paymentProcessorService.sendPaymentToProcessor(transactionId);
+            // Send payment to processor (Wallet Server)
+            String processorResponseJson = paymentProcessorService.sendPaymentToProcessor(transactionId);
 
-        // Convert JSON response to PaymentProcessorResponse object
-        PaymentProcessorResponse processorResponse = objectMapper.readValue(processorResponseJson, PaymentProcessorResponse.class);
+            // Convert JSON response to PaymentProcessorResponse object
+            PaymentProcessorResponse processorResponse = objectMapper.readValue(processorResponseJson, PaymentProcessorResponse.class);
 
-        // Update payment status based on processor response
-        return paymentProcessorService.paymentStatusUpdate(processorResponse);
+            // Update payment status based on processor response
+            return paymentProcessorService.paymentStatusUpdate(processorResponse);
     }
-
-
 }
 
 
