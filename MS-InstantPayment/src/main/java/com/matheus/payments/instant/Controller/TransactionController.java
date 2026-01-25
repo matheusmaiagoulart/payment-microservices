@@ -28,7 +28,6 @@ public class TransactionController {
 
     @PostMapping("/pix")
     public ResponseEntity<PaymentProcessorResponse> CreateInstantPayment(@Valid @RequestBody TransactionRequest request) throws IOException {
-
         PaymentProcessorResponse paymentOrchestration = paymentService.paymentOrchestration(request);
         return ResponseEntity.ok(paymentOrchestration);
     }
