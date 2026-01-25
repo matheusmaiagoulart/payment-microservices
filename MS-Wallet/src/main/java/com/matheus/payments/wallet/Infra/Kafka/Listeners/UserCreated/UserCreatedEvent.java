@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Domain.Events;
+package com.matheus.payments.wallet.Infra.Kafka.Listeners.UserCreated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.shared.Domain.accountType;
 import org.shared.Domain.keyType;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -16,11 +17,11 @@ import java.util.UUID;
  * @author Matheus Maia Goulart
  */
 @NoArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class UserCreatedEvent {
 
-
-    @JsonProperty("id")
+    @JsonProperty("userId")
     private UUID accountId;
 
     @JsonProperty("cpf")
@@ -31,4 +32,6 @@ public class UserCreatedEvent {
 
     @JsonProperty("accountType")
     private accountType accountType;
+
+    private LocalDateTime timestamp;
 }
