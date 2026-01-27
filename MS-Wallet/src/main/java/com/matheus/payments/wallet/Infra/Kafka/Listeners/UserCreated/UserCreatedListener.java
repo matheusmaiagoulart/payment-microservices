@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Application.Events.WalletCreatedEvent;
+ import com.matheus.payments.wallet.Application.Events.WalletCreationFailed;
 import com.matheus.payments.wallet.Application.UseCases.CreateWallet;
 import com.matheus.payments.wallet.Infra.Audit.UserCreatedListenerAudit;
 import com.matheus.payments.wallet.utils.ApplicationData;
@@ -13,10 +14,12 @@ import jakarta.persistence.PersistenceException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Component
 public class UserCreatedListener {
@@ -34,15 +37,16 @@ public class UserCreatedListener {
     }
 
 
-    @Transactional
     @KafkaListener(topics = KafkaTopics.USER_CREATED_EVENT_TOPIC, groupId = ApplicationData.APPLICATION_CONSUMER_GROUP)
     public void createUserWalletListener(ConsumerRecord<String, String> message, Acknowledgment ack) throws JsonProcessingException, PersistenceException {
         String keyValue = "";
+        UUID userId = null;
         String correlationId = new String(message.headers().lastHeader("correlationId").value());
         CorrelationId.set(correlationId); // Set correlationId on MDC to be able to get it on audits logs
         try {
             UserCreatedEvent request = objectMapper.readValue(message.value(), UserCreatedEvent.class);
             keyValue = request.getKeyValue();
+            userId = request.getAccountId();
             audit.logUserCreatedEventReceived(keyValue);
 
             createWallet.createWallet(request);
@@ -52,10 +56,12 @@ public class UserCreatedListener {
             ack.acknowledge();
         } catch (JsonProcessingException e) {
             audit.logFailedToProcessMessage(keyValue, e.getMessage());
+            ack.acknowledge();
 
-        } catch (PersistenceException e) {
+        } catch (DataIntegrityViolationException | PersistenceException e) {
             audit.logFailedToProcessMessage(keyValue, e.getMessage());
-            throw e; // Propaga para retry do Kafka
+            internalEventPublisher.publishEvent(new WalletCreationFailed(userId, keyValue, e.getMessage()));
+            ack.acknowledge();
         } finally {
             MDC.clear();
         }
