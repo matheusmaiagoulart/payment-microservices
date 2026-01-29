@@ -14,7 +14,6 @@ import com.matheus.payments.wallet.Domain.Models.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
 import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
-import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import org.shared.DTOs.TransactionDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -23,7 +22,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
