@@ -51,18 +51,13 @@ public class InstantPayment {
         try {
             checkTransactionAlreadyProcessed(UUID.fromString(request.getTransactionId())); // Idempotency validation
             transferExecutionWithRetry(pixTransfer);
-            registryLedgeEntries(pixTransfer);
-
             return successTransfer(pixTransfer);
-        }
-        catch (OptimisticLockingFailureException e) {
-        audit.logFailedGeneric(pixTransfer.getTransactionId().toString(), "Max retry attempts reached for transaction due to concurrent updates.");
+        } catch (OptimisticLockingFailureException e) {
+            audit.logFailedGeneric(pixTransfer.getTransactionId().toString(), "Max retry attempts reached for transaction due to concurrent updates.");
             return failedTransfer(pixTransfer, new ConcurrentTransactionException());
-        }
-        catch (TransactionAlreadyProcessed e) {
+        } catch (TransactionAlreadyProcessed e) {
             return idempotencyError(pixTransfer, e);
-        }
-        catch (DomainException e) {
+        } catch (DomainException e) {
             return failedTransfer(pixTransfer, e);
         }
     }
@@ -91,7 +86,7 @@ public class InstantPayment {
      */
     private void saveProcessedTransaction(UUID transactionId) {
         try {
-            transactionsProcessedRepository.save(new TransactionsProcessed(transactionId));
+            transactionsProcessedRepository.saveAndFlush(new TransactionsProcessed(transactionId));
         } catch (DataIntegrityViolationException e) {
             throw new TransactionAlreadyProcessed();
         }
@@ -115,8 +110,8 @@ public class InstantPayment {
         WalletLedger entryCredit = new WalletLedger()
                 .createCreditEntry(transactionId.toString(), receiverWalletId, senderWalletId, pixTransfer.getAmount());
         try {
-            walletLedgeRepository.save(entryDebit);
-            walletLedgeRepository.save(entryCredit);
+            walletLedgeRepository.saveAndFlush(entryDebit);
+            walletLedgeRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedGeneric(transactionId.toString(), e.getMessage());
             throw new FailedToSaveLedgeEntry(e.getMessage());
@@ -150,6 +145,7 @@ public class InstantPayment {
 
         return new PixTransfer(request.getTransactionId(), senderWallet, receiverWallet, accountIdSender, accountIdReceiver, request.getAmount());
     }
+
     /**
      * This method execute the transfer between wallets, with retry mechanism for Optimistic Locking exceptions.
      *
@@ -161,8 +157,7 @@ public class InstantPayment {
 
         sameUserValidation(
                 pixTransfer.getSenderPixKey().getAccountId(),
-                pixTransfer.getReceiverPixKey().getAccountId()
-        );
+                pixTransfer.getReceiverPixKey().getAccountId());
 
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
@@ -178,8 +173,10 @@ public class InstantPayment {
         walletTransfer.senderWallet().debitAccount(walletTransfer.amount());
         walletTransfer.receiverWallet().creditAccount(walletTransfer.amount());
 
-        walletRepository.save(walletTransfer.senderWallet());
-        walletRepository.save(walletTransfer.receiverWallet());
+        walletRepository.saveAndFlush(walletTransfer.senderWallet());
+        walletRepository.saveAndFlush(walletTransfer.receiverWallet());
+
+        registryLedgeEntries(pixTransfer);
 
         saveProcessedTransaction(pixTransfer.getTransactionId());
     }
