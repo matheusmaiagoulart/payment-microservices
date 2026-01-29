@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator;
 import org.shared.Domain.accountType;
 
 import java.math.BigDecimal;
@@ -29,13 +30,17 @@ public class Wallet {
     @Enumerated(EnumType.STRING)
     private accountType accountType;
 
+    @NotNull
+    private String socialId;
+
     private Boolean isActive;
     private LocalDateTime createdAt;
 
     @Version
     private Integer version;
 
-    public Wallet(UUID accountId, accountType accountType) {
+    public Wallet(UUID accountId, accountType accountType, String socialId) {
+        this.socialId = socialId;
         this.accountId = accountId;
         this.balance = BigDecimal.ZERO;
         this.accountType = accountType;

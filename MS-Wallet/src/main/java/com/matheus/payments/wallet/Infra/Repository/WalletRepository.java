@@ -16,4 +16,6 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
     @Lock(LockModeType.OPTIMISTIC)
     @Query("SELECT w FROM Wallet w WHERE w.accountId = :userId and w.isActive = true")
     Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId);
+
+    Boolean existsBySocialId(String keyValue);
 }

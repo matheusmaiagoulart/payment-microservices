@@ -1,15 +1,17 @@
 package com.matheus.payments.wallet.Application.UseCases;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
+import com.matheus.payments.wallet.Domain.Exceptions.SocialIdAlreadyExistsException;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.UserCreated.UserCreatedEvent;
-import com.matheus.payments.wallet.Domain.Exceptions.PixKeyAlreadyRegisteredException;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
 import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import jakarta.persistence.PersistenceException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class CreateWallet {
@@ -25,32 +27,34 @@ public class CreateWallet {
     }
 
     @Transactional
-    public boolean createWallet(UserCreatedEvent request) throws PersistenceException, PixKeyAlreadyRegisteredException {
+    public boolean createWallet(UserCreatedEvent request) throws PersistenceException, SocialIdAlreadyExistsException {
         audit.logCreatingWallet(request.getKeyValue());
 
-        if (pixKeyRepository.existsWalletKeysByKeyValue(request.getKeyValue())) {
+        if (walletRepository.existsBySocialId(request.getKeyValue())) {
             audit.logFailedCreateWallet(request.getKeyValue());
-            throw new PixKeyAlreadyRegisteredException(request.getKeyValue());
+            throw new SocialIdAlreadyExistsException(request.getKeyValue());
         }
 
         try {
             Wallet walletCreated = persistWallet(request);
             createPixKey(request, walletCreated);
             return true;
-        } catch (PersistenceException e) {
+        } catch (DataIntegrityViolationException e) {
             audit.logFailedGeneric(request.getKeyValue(), e.getMessage());
-            throw new PersistenceException("An error occurred while creating the wallet: " + e.getMessage());
+            throw new DataIntegrityViolationException("An error occurred while creating the wallet: " + e.getMessage());
         }
     }
 
     private Wallet persistWallet(UserCreatedEvent request) throws PersistenceException {
-        Wallet wallet = new Wallet(request.getAccountId(), request.getAccountType());
+        Wallet wallet = new Wallet(request.getAccountId(), request.getAccountType(), request.getKeyValue());
         walletRepository.save(wallet);
+        walletRepository.flush();
         return wallet;
     }
 
     private void createPixKey(UserCreatedEvent request, Wallet wallet) throws PersistenceException {
         PixKey walletKeys = new PixKey(request.getKeyValue(), request.getKeyType(), wallet.getAccountId());
         pixKeyRepository.save(walletKeys);
+        pixKeyRepository.flush();
     }
 }

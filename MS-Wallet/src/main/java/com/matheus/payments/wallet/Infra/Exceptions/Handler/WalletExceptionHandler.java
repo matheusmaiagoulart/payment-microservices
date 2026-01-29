@@ -28,9 +28,9 @@ public class WalletExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handlerMessage);
     }
 
-    @ExceptionHandler(PixKeyAlreadyRegisteredException.class)
-    public ResponseEntity<HandlerMessage> KeyValueAlreadyExists(PixKeyAlreadyRegisteredException keyValueAlreadyExists){
-    HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.BAD_REQUEST , "Key value already exists: " + keyValueAlreadyExists.getMessage());
+    @ExceptionHandler(SocialIdAlreadyExistsException.class)
+    public ResponseEntity<HandlerMessage> SocialIdAlreadyExistsException(SocialIdAlreadyExistsException keyValueAlreadyExists){
+    HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.BAD_REQUEST , "Social ID already exists: " + keyValueAlreadyExists.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handlerMessage);
     }
 
