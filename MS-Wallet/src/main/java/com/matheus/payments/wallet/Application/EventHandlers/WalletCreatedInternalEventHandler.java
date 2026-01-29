@@ -46,7 +46,7 @@ public class WalletCreatedInternalEventHandler {
 
     @Recover
     public void handleRetryFailed(Exception e, WalletCreatedEvent event)  {
-        log.error("Failed to process WalletCreatedEvent for userId {} after retries", event.getCpf() ,
+        log.error("Failed to process Wallet Creation for userId {} after retries", event.getCpf() ,
                 LogBuilder.eventLog("WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, event.getCpf()),
                 LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), getClass().getName(), "handler", e.getMessage()));
     }
