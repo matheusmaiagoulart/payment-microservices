@@ -4,6 +4,8 @@ import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Application.DTOs.Context.WalletTransfer;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
+import com.matheus.payments.wallet.Application.Services.PixKeyService;
+import com.matheus.payments.wallet.Application.Services.WalletService;
 import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.Models.TransactionsProcessed;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
@@ -11,7 +13,6 @@ import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
 import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
-import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import org.shared.DTOs.TransactionDTO;
@@ -29,15 +30,15 @@ import java.util.UUID;
 public class InstantPayment {
 
     private final WalletServiceAudit audit;
-    private final WalletRepository walletRepository;
-    private final PixKeyRepository pixKeyRepository;
+    private final WalletService walletService;
+    private final PixKeyService pixKeyService;
     private final WalletLedgeRepository walletLedgeRepository;
     private final TransactionProcessedRepository transactionsProcessedRepository;
 
-    public InstantPayment(WalletRepository walletRepository, PixKeyRepository pixKeyRepository, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessedRepository, WalletLedgeRepository walletLedgeRepository) {
+    public InstantPayment(PixKeyService pixKeyService, WalletService walletService, WalletServiceAudit audit, TransactionProcessedRepository transactionsProcessedRepository, WalletLedgeRepository walletLedgeRepository) {
         this.audit = audit;
-        this.walletRepository = walletRepository;
-        this.pixKeyRepository = pixKeyRepository;
+        this.walletService = walletService;
+        this.pixKeyService = pixKeyService;
         this.walletLedgeRepository = walletLedgeRepository;
         this.transactionsProcessedRepository = transactionsProcessedRepository;
     }
@@ -60,15 +61,6 @@ public class InstantPayment {
         } catch (DomainException e) {
             return failedTransfer(pixTransfer, e);
         }
-    }
-
-
-    public Optional<Wallet> getWalletById(UUID walletId) {
-        return walletRepository.findByAccountIdAndIsActiveTrue(walletId);
-    }
-
-    public Optional<PixKey> getWalletIdByKey(String keyValue) {
-        return pixKeyRepository.findAccountIdByKey(keyValue);
     }
 
     private void sameUserValidation(UUID senderWalletId, UUID receiverWalletId) {
@@ -137,11 +129,11 @@ public class InstantPayment {
      * @param request All data from the transfer request
      */
     private PixTransfer createPixTransfer(TransactionDTO request) {
-        PixKey accountIdSender = getWalletIdByKey(request.getSenderKey()).orElseThrow(() -> new WalletNotFoundException("Sender"));
-        PixKey accountIdReceiver = getWalletIdByKey(request.getReceiverKey()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
+        PixKey accountIdSender = pixKeyService.getWalletIdByKey(request.getSenderKey()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        PixKey accountIdReceiver = pixKeyService.getWalletIdByKey(request.getReceiverKey()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
-        Wallet senderWallet = getWalletById(accountIdSender.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Sender"));
-        Wallet receiverWallet = getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
+        Wallet senderWallet = walletService.getWalletById(accountIdSender.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Sender"));
+        Wallet receiverWallet = walletService.getWalletById(accountIdReceiver.getAccountId()).orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
         return new PixTransfer(request.getTransactionId(), senderWallet, receiverWallet, accountIdSender, accountIdReceiver, request.getAmount());
     }
@@ -161,10 +153,10 @@ public class InstantPayment {
 
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
-        Wallet senderWallet = getWalletById(pixTransfer.getSenderPixKey().getAccountId())
+        Wallet senderWallet = walletService.getWalletById(pixTransfer.getSenderPixKey().getAccountId())
                 .orElseThrow(() -> new WalletNotFoundException("Sender"));
 
-        Wallet receiverWallet = getWalletById(pixTransfer.getReceiverPixKey().getAccountId())
+        Wallet receiverWallet = walletService.getWalletById(pixTransfer.getReceiverPixKey().getAccountId())
                 .orElseThrow(() -> new WalletNotFoundException("Receiver"));
 
         WalletTransfer walletTransfer =
@@ -173,8 +165,8 @@ public class InstantPayment {
         walletTransfer.senderWallet().debitAccount(walletTransfer.amount());
         walletTransfer.receiverWallet().creditAccount(walletTransfer.amount());
 
-        walletRepository.saveAndFlush(walletTransfer.senderWallet());
-        walletRepository.saveAndFlush(walletTransfer.receiverWallet());
+        walletService.saveWallet(walletTransfer.senderWallet());
+        walletService.saveWallet(walletTransfer.receiverWallet());
 
         registryLedgeEntries(pixTransfer);
 
