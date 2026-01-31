@@ -17,7 +17,6 @@ public class OutboxService {
         this.outboxRepository = outboxRepository;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createOutbox(UUID userId, String eventType, String topic, String payload) {
         Outbox outbox = new Outbox(userId, eventType, topic, payload);
         outboxRepository.save(outbox);

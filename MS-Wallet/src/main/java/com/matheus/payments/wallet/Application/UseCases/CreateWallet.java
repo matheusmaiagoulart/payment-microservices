@@ -7,8 +7,6 @@ import com.matheus.payments.wallet.Domain.Exceptions.SocialIdAlreadyExistsExcept
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.UserCreated.UserCreatedEvent;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
-import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
-import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
 import jakarta.persistence.PersistenceException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -41,6 +39,7 @@ public class CreateWallet {
             Wallet walletCreated = persistWallet(request);
             createPixKey(request, walletCreated);
             return true;
+
         } catch (DataIntegrityViolationException e) {
             audit.logFailedGeneric(request.getKeyValue(), e.getMessage());
             throw new DataIntegrityViolationException("An error occurred while creating the wallet: " + e.getMessage());

@@ -38,16 +38,16 @@ public class WalletCreatedInternalEventHandler {
         this.outboxService = outboxService;
     }
 
-    @Retryable(value = {JsonProcessingException.class, DataAccessException.class, PersistenceException.class}, maxAttempts = 4, backoff = @Backoff(delay = 2000, multiplier = 2))
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handler(WalletCreatedEvent event) throws JsonProcessingException {
-        outboxService.createOutbox(event.getUserId(), "WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, objectMapper.writeValueAsString(event));
-    }
+        try {
+            outboxService.createOutbox(event.getUserId(), "WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException | DataAccessException | PersistenceException e) {
+            log.error("Error while creating outbox entry for WalletCreatedEvent for userId {}: {}", event.getCpf(), e.getMessage(),
+                    LogBuilder.eventLog("WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, event.getCpf()),
+                    LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), getClass().getName(), "handler", e.getMessage()));
+            throw e;
+        }
 
-    @Recover
-    public void handleRetryFailed(Exception e, WalletCreatedEvent event)  {
-        log.error("Failed to process Wallet Creation for userId {} after retries", event.getCpf() ,
-                LogBuilder.eventLog("WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, event.getCpf()),
-                LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), getClass().getName(), "handler", e.getMessage()));
     }
 }
