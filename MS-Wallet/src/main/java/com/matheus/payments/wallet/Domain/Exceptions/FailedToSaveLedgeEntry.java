@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Infra.Exceptions.Custom;
+package com.matheus.payments.wallet.Domain.Exceptions;
 
 public class FailedToSaveLedgeEntry extends RuntimeException {
     public FailedToSaveLedgeEntry(String message) {
