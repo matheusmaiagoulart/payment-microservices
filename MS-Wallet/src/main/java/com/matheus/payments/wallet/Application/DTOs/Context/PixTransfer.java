@@ -1,6 +1,5 @@
 package com.matheus.payments.wallet.Application.DTOs.Context;
 
-import com.matheus.payments.wallet.Domain.Models.Wallet;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,16 +17,12 @@ import java.util.UUID;
 @Setter
 public class PixTransfer {
         UUID transactionId;
-        Wallet senderWallet;
-        Wallet receiverWallet;
         PixKey senderPixKey;
         PixKey receiverPixKey;
         BigDecimal amount;
 
-    public PixTransfer(String transactionId, Wallet senderWallet, Wallet receiverWallet, PixKey senderPixKey, PixKey receiverPixKey, BigDecimal amount) {
+    public PixTransfer(String transactionId, PixKey senderPixKey, PixKey receiverPixKey, BigDecimal amount) {
         this.transactionId = UUID.fromString(transactionId);
-        this.senderWallet = senderWallet;
-        this.receiverWallet = receiverWallet;
         this.senderPixKey = senderPixKey;
         this.receiverPixKey = receiverPixKey;
         this.amount = amount;
