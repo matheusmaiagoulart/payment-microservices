@@ -1,6 +1,11 @@
 package com.matheus.payments.wallet.Domain.Exceptions;
 
 public class SocialIdAlreadyExistsException extends DomainException {
-    public SocialIdAlreadyExistsException(String message) { super(message); }
-    public SocialIdAlreadyExistsException() { super(); }
+
+    private static final String CODE = "SOCIAL_ID_ALREADY_EXISTS";
+
+    public SocialIdAlreadyExistsException(String message) {
+        super(CODE, message);
+    }
+
 }

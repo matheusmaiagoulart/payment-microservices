@@ -2,10 +2,9 @@ package com.matheus.payments.wallet.Domain.Exceptions;
 
 
 public class SameUserException extends DomainException {
-    public SameUserException() {
-        super();
-    }
+    private static final String CODE = "SAME_USER";
+
     public SameUserException(String message) {
-        super(message);
+        super(CODE, message);
     }
 }

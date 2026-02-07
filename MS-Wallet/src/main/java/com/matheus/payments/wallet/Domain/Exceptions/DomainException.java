@@ -5,11 +5,14 @@ package com.matheus.payments.wallet.Domain.Exceptions;
  */
 public class DomainException extends RuntimeException{
 
-    public DomainException() {
-        super();
-    }
-    public DomainException(String message) {
+    private final String errorCode;
+
+    public DomainException(String errorCode, String message) {
         super(message);
+        this.errorCode = errorCode;
     }
 
+    public String getErrorCode() {
+        return errorCode;
+    }
 }
