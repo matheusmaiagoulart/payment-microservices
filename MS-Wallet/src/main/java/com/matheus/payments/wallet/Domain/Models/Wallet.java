@@ -53,7 +53,7 @@ public class Wallet {
 
         BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.HALF_UP); // Ensure amount has 2 decimal places, and round up if necessary
 
-        if (normalizedAmount.compareTo(BigDecimal.ZERO) < 0) {
+        if (normalizedAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException();
         }
         if (!sufficientBalanceValidation(normalizedAmount)) {
