@@ -2,7 +2,8 @@ package com.matheus.payments.wallet.Application.Services;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
-import com.matheus.payments.wallet.Domain.Exceptions.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Domain.Exceptions.DomainException;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
 import com.matheus.payments.wallet.Domain.Exceptions.WalletNotFoundException;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -30,17 +31,20 @@ public class TransferExecution {
      * This method execute the transfer between wallets, with retry mechanism for Optimistic Locking exceptions.
      *
      * @param pixTransfer Data transfer context
+     * @throws DomainException If business validation fails (insufficient balance, wallet not found, etc)
+     * @throws FailedToSaveLedgeEntry If ledger entry save fails
+     * @throws OptimisticLockingFailureException If concurrent update conflict occurs (will be retried)
      */
     @Retryable(retryFor = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void transferExecutionWithRetry(PixTransfer pixTransfer) {
+    public void transferExecutionWithRetry(PixTransfer pixTransfer) throws DomainException, FailedToSaveLedgeEntry {
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
         Wallet senderWallet = walletService.getWalletById(pixTransfer.getSenderPixKey().getAccountId())
-                .orElseThrow(() -> new WalletNotFoundException("Sender"));
+                .orElseThrow(WalletNotFoundException::senderNotFound);
 
         Wallet receiverWallet = walletService.getWalletById(pixTransfer.getReceiverPixKey().getAccountId())
-                .orElseThrow(() -> new WalletNotFoundException("Receiver"));
+                .orElseThrow(WalletNotFoundException::receiverNotFound);
 
         senderWallet.debitAccount(pixTransfer.getAmount());
         receiverWallet.creditAccount(pixTransfer.getAmount());
