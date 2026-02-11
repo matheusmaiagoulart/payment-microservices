@@ -8,7 +8,6 @@ import com.matheus.payments.wallet.Infra.Kafka.Listeners.UserCreated.UserCreated
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
 import jakarta.persistence.PersistenceException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,15 +34,10 @@ public class CreateWallet {
             throw new SocialIdAlreadyExistsException(request.getKeyValue());
         }
 
-        try {
-            Wallet walletCreated = persistWallet(request);
-            createPixKey(request, walletCreated);
-            return true;
+        Wallet walletCreated = persistWallet(request);
+        createPixKey(request, walletCreated);
 
-        } catch (DataIntegrityViolationException e) {
-            audit.logFailedGeneric(request.getKeyValue(), e.getMessage());
-            throw new DataIntegrityViolationException("An error occurred while creating the wallet: " + e.getMessage());
-        }
+        return true;
     }
 
     private Wallet persistWallet(UserCreatedEvent request) throws PersistenceException {
@@ -51,8 +45,8 @@ public class CreateWallet {
         return walletService.saveWallet(wallet);
     }
 
-    private void createPixKey(UserCreatedEvent request, Wallet wallet) throws PersistenceException {
+    private PixKey createPixKey(UserCreatedEvent request, Wallet wallet) throws PersistenceException {
         PixKey walletKeys = new PixKey(request.getKeyValue(), request.getKeyType(), wallet.getAccountId());
-        pixKeyService.savePixKey(walletKeys);
+        return pixKeyService.savePixKey(walletKeys);
     }
 }
