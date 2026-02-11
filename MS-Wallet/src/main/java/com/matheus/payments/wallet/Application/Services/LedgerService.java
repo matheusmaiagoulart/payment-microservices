@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.Services;
 import com.matheus.payments.wallet.Application.Audit.LedgerAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
-import com.matheus.payments.wallet.Domain.Exceptions.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class LedgerService {
             walletLedgeRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, pixTransfer.getSenderPixKey().getKeyValue());
-            throw new FailedToSaveLedgeEntry("Failed to save ledger entries for transactionId: " + transactionId);
+            throw new FailedToSaveLedgeEntry(transactionId);
         }
     }
 }
