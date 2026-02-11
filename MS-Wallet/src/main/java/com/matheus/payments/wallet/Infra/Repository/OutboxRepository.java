@@ -11,6 +11,6 @@ import java.util.UUID;
 @Repository
 public interface OutboxRepository extends JpaRepository<Outbox, UUID> {
 
-    @Query(value = "SELECT TOP 100 * FROM outbox WHERE is_sent = 0", nativeQuery = true)
+    @Query(value = "SELECT TOP 20 * FROM outbox WHERE is_sent = 0 ORDER BY created_at ASC", nativeQuery = true)
     List<Outbox> findAllBySentFalse();
 }

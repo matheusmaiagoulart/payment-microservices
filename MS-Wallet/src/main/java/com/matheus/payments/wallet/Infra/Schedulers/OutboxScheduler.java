@@ -1,57 +1,42 @@
 package com.matheus.payments.wallet.Infra.Schedulers;
 
 
+import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
 import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
-import org.springframework.kafka.core.KafkaTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This Scheduler is responsible for get all pending Outbox events and send them to respective Kafka Topics.
  *
  * @author Matheus Maia Goulart
  */
+@Slf4j
 @Service
 public class OutboxScheduler {
 
     private final OutboxRepository outboxRepository;
-    private final KafkaTemplate<String, String> publisher;
+    private final OutboxService outboxService;
 
-    public OutboxScheduler(OutboxRepository outboxRepository, KafkaTemplate<String, String> publisher) {
+    public OutboxScheduler(OutboxService outboxService, OutboxRepository outboxRepository) {
         this.outboxRepository = outboxRepository;
-        this.publisher = publisher;
+        this.outboxService = outboxService;
     }
 
     @Scheduled(fixedDelay = 10000)
     public void sendToCreateWallet() {
         List<Outbox> pendingToSend = outboxRepository.findAllBySentFalse();
-        pendingToSend.forEach(outbox -> sendOutboxEvent(outbox));
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // Always create a new transaction for each outbox event
-    public void sendOutboxEvent(Outbox outbox) {
-        try {
-            publisher.send(outbox.getTopic(), outbox.getPayload());
-            setOutboxSent(outbox);
-        } catch (Exception e) {
-            setOutboxFailed(outbox, e.getMessage());
-            outboxRepository.save(outbox);
-        }
-    }
-
-    public void setOutboxSent(Outbox outbox) {
-        outbox.setSent(true);
-        outboxRepository.save(outbox);
-    }
-
-    public void setOutboxFailed(Outbox outbox, String errorMessage) {
-        outbox.setFailed(true);
-        outbox.setFailureReason(errorMessage);
-        outboxRepository.save(outbox);
+        pendingToSend.forEach(outbox -> {
+            try {
+                outboxService.sendOutboxEvent(outbox);
+            } catch (ExecutionException | InterruptedException e) {
+                log.error("Failed to process outbox. Outbox Id: {} ", outbox.getId());
+            }
+        });
     }
 }
