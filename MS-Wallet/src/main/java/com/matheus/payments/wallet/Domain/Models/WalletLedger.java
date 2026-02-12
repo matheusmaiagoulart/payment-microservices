@@ -55,7 +55,7 @@ public class WalletLedger {
         return new WalletLedger(UUID.fromString(transactionId), walletId, counterpartyWalletId, amount, EntryType.CREDIT, LocalDateTime.now());
     }
 
-    enum EntryType {
+    public enum EntryType {
         DEBIT,
         CREDIT
     }
