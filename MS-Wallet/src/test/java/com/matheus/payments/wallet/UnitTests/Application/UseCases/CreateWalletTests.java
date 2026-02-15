@@ -42,6 +42,16 @@ public class CreateWalletTests {
     @InjectMocks
     private CreateWallet createWallet;
 
+    private UserCreatedEvent createValidRequest() {
+        UserCreatedEvent request = new UserCreatedEvent();
+        request.setKeyType(keyType.CPF);
+        request.setKeyValue("00000000000");
+        request.setAccountId(UUID.randomUUID());
+        request.setTimestamp(LocalDateTime.now());
+        request.setAccountType(accountType.CHECKING);
+        return request;
+    }
+
     @Nested
     @DisplayName("SUCCESS SCENARIOS")
     class SuccessScenarios {
@@ -51,12 +61,7 @@ public class CreateWalletTests {
         public void shouldCreateWalletSuccessfully_WhenKeyValueDoesNotExists() {
 
             // Arrange
-            UserCreatedEvent request = new UserCreatedEvent();
-            request.setKeyType(keyType.CPF);
-            request.setKeyValue("00000000000");
-            request.setAccountId(UUID.randomUUID());
-            request.setTimestamp(LocalDateTime.now());
-            request.setAccountType(accountType.CHECKING);
+            UserCreatedEvent request = createValidRequest();
 
             Wallet wallet = new Wallet(request.getAccountId(), request.getAccountType(), request.getKeyValue());
             PixKey pixKey = new PixKey(request.getKeyValue(), request.getKeyType(), request.getAccountId());
@@ -77,7 +82,6 @@ public class CreateWalletTests {
             Mockito.verify(walletService, Mockito.times(1)).saveWallet(any(Wallet.class));
             Mockito.verify(pixKeyService, Mockito.times(1)).savePixKey(any(PixKey.class));
         }
-
     }
 
     @Nested
@@ -91,12 +95,7 @@ public class CreateWalletTests {
             @DisplayName("Should not create Wallet when KeyValue (CPF) exists")
             public void shouldNotCreateWallet_WhenKeyValueExists() {
                 // Arrange
-                UserCreatedEvent request = new UserCreatedEvent();
-                request.setKeyType(keyType.CPF);
-                request.setKeyValue("00000000000");
-                request.setAccountId(UUID.randomUUID());
-                request.setTimestamp(LocalDateTime.now());
-                request.setAccountType(accountType.CHECKING);
+                UserCreatedEvent request = createValidRequest();
 
                 when(walletService.existsBySocialId(request.getKeyValue())).thenReturn(true);
 
@@ -120,12 +119,7 @@ public class CreateWalletTests {
             @DisplayName("Should throw PersistenceException when wallet save fails")
             public void shouldThrowPersistenceException_WhenWalletSaveFails() {
                 // Arrange
-                UserCreatedEvent request = new UserCreatedEvent();
-                request.setKeyType(keyType.CPF);
-                request.setKeyValue("00000000000");
-                request.setAccountId(UUID.randomUUID());
-                request.setTimestamp(LocalDateTime.now());
-                request.setAccountType(accountType.CHECKING);
+                UserCreatedEvent request = createValidRequest();
 
                 when(walletService.existsBySocialId(request.getKeyValue())).thenReturn(false);
 
@@ -146,12 +140,7 @@ public class CreateWalletTests {
             @DisplayName("Should throw PersistenceException when PixKey save fails")
             public void shouldThrowPersistenceException_WhenPixKeySaveFails() {
                 // Arrange
-                UserCreatedEvent request = new UserCreatedEvent();
-                request.setKeyType(keyType.CPF);
-                request.setKeyValue("00000000000");
-                request.setAccountId(UUID.randomUUID());
-                request.setTimestamp(LocalDateTime.now());
-                request.setAccountType(accountType.CHECKING);
+                UserCreatedEvent request = createValidRequest();
 
                 Wallet wallet = new Wallet(request.getAccountId(), request.getAccountType(), request.getKeyValue());
 
@@ -175,12 +164,7 @@ public class CreateWalletTests {
             @DisplayName("Should throw DataAccessException when database connection fails")
             public void shouldThrowDataAccessException_WhenDatabaseConnectionFails() {
                 // Arrange
-                UserCreatedEvent request = new UserCreatedEvent();
-                request.setKeyType(keyType.CPF);
-                request.setKeyValue("00000000000");
-                request.setAccountId(UUID.randomUUID());
-                request.setTimestamp(LocalDateTime.now());
-                request.setAccountType(accountType.CHECKING);
+                UserCreatedEvent request = createValidRequest();
 
                 when(walletService.existsBySocialId(request.getKeyValue())).thenReturn(false);
                 when(walletService.saveWallet(any(Wallet.class))).thenThrow(new DataAccessException("Database connection error") {

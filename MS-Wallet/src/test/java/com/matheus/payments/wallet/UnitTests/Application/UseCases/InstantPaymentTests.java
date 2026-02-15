@@ -53,51 +53,36 @@ public class InstantPaymentTests {
     @InjectMocks
     private InstantPayment instantPayment;
 
+    private void setupValidPixKeys(TransactionDTO request) {
+        PixKey senderPixKey = PixKeyFixture.createPixKey(
+                request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
+        PixKey receiverPixKey = PixKeyFixture.createPixKey(
+                request.getReceiverKey(), keyType.CPF, request.getReceiverAccountId());
+
+        when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+        when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.of(receiverPixKey));
+    }
+
     @Nested
     @DisplayName("SUCCESS SCENARIOS")
     class SuccessScenarios {
 
         @Test
-        @DisplayName("Should process Instant Payment successfully when data is valid")
-        public void shouldProcessInstantPaymentSuccessfully_WhenDataIsValid() {
-
-            BigDecimal amount = new BigDecimal("10.00"); // Amount to be transferred
-            BigDecimal senderInitialBalance = new BigDecimal("100.00");
-
+        @DisplayName("Should process Instant Payment successfully")
+        public void shouldProcessInstantPaymentSuccessfully() {
             // Arrange
-            TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
-
-            PixKey senderPixKey = PixKeyFixture.createPixKey(
-                    request.getSenderKey(),
-                    keyType.CPF,
-                    request.getSenderAccountId());
-
-            PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                    request.getReceiverKey(),
-                    keyType.CPF,
-                    request.getReceiverAccountId());
-
-            when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                    .thenReturn(Optional.of(senderPixKey));
-            when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                    .thenReturn(Optional.of(receiverPixKey));
-            when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                    .thenReturn(false);
-
+            TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("10.00"));
+            setupValidPixKeys(request);
+            when(transactionsProcessedRepository.existsById(any())).thenReturn(false);
 
             // Act
             InstantPaymentResponse response = instantPayment.transferProcess(request);
 
             // Assert - Response
-            assertNotNull(response);
             assertTrue(response.isSucessful());
             assertFalse(response.isAlreadyProcessed());
-
-            // Assert - Data consistency
             assertEquals(response.getReceiverAccountId(), request.getReceiverAccountId());
             assertEquals(response.getSenderAccountId(), request.getSenderAccountId());
-
-            // Assert - Verify Operations were called
             verify(transactionsProcessedRepository, times(1)).saveAndFlush(any());
             verify(transactionsProcessedRepository, times(1)).existsById(any());
         }
@@ -105,42 +90,19 @@ public class InstantPaymentTests {
         @Test
         @DisplayName("Should handle idempotent request when transaction was already processed")
         public void shouldHandleIdempotentRequest_WhenTransactionWasAlreadyProcessed() {
-
-            BigDecimal amount = new BigDecimal("10.00"); // Amount to be transferred
-
             // Arrange
-            TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
-
-            PixKey senderPixKey = PixKeyFixture.createPixKey(
-                    request.getSenderKey(),
-                    keyType.CPF,
-                    request.getSenderAccountId());
-
-            PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                    request.getReceiverKey(),
-                    keyType.CPF,
-                    request.getReceiverAccountId());
-
-            when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                    .thenReturn(Optional.of(senderPixKey));
-            when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                    .thenReturn(Optional.of(receiverPixKey));
-            when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                    .thenReturn(true);
+            TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("10.00"));
+            setupValidPixKeys(request);
+            when(transactionsProcessedRepository.existsById(any())).thenReturn(true);
 
             // Act
             InstantPaymentResponse response = instantPayment.transferProcess(request);
 
             // Assert - Response
-            assertNotNull(response);
             assertTrue(response.isSucessful());
             assertTrue(response.isAlreadyProcessed());
-
-            // Assert - Data consistency
             assertEquals(response.getReceiverAccountId(), request.getReceiverAccountId());
             assertEquals(response.getSenderAccountId(), request.getSenderAccountId());
-
-            // Assert - Verify Operations were called
             verify(transactionsProcessedRepository, never()).saveAndFlush(any());
             verify(transactionsProcessedRepository, times(1)).existsById(any());
         }
@@ -152,36 +114,15 @@ public class InstantPaymentTests {
             @Test
             @DisplayName("Should fail Instant Payment when sender and receiver are the same")
             public void shouldFailInstantPayment_WhenSenderAndReceiverAreTheSame() {
-
-                BigDecimal amount = new BigDecimal("100"); // Amount to be transferred
-                BigDecimal senderInitialBalance = new BigDecimal("10");
-
                 // Arrange
-                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
+                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("100"));
 
-                Wallet senderWallet = WalletFixture.createWallet(
-                        request.getSenderAccountId(),
-                        accountType.CHECKING,
-                        request.getSenderKey());
-                senderWallet.setBalance(senderInitialBalance);
+                PixKey senderPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
+                PixKey receiverPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
 
-                PixKey senderPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(),
-                        keyType.CPF,
-                        request.getSenderAccountId());
-
-                PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(),
-                        keyType.CPF,
-                        request.getSenderAccountId());
-
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.of(senderPixKey));
-                when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                        .thenReturn(Optional.of(receiverPixKey));
-
-                when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                        .thenReturn(false);
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+                when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.of(receiverPixKey));
+                when(transactionsProcessedRepository.existsById(any())).thenReturn(false);
 
                 // Act
                 InstantPaymentResponse response = instantPayment.transferProcess(request);
@@ -204,20 +145,16 @@ public class InstantPaymentTests {
             @Test
             @DisplayName("Should fail when sender PIX key does not exist")
             public void shouldFail_WhenSenderPixKeyDoesNotExists() {
-
-                BigDecimal amount = new BigDecimal("100"); // Amount to be transferred
-                BigDecimal senderInitialBalance = new BigDecimal("10");
-
                 // Arrange
-                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
+                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("100"));
 
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.empty());
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.empty());
 
                 // Assert - Response
                 WalletNotFoundException exception = assertThrows(WalletNotFoundException.class, () -> {
                     instantPayment.transferProcess(request);
                 });
+
                 assertNotNull(exception);
                 assertEquals(WalletNotFoundException.SENDER_CODE, exception.getErrorCode());
                 assertEquals(WalletNotFoundException.class, exception.getClass());
@@ -230,28 +167,21 @@ public class InstantPaymentTests {
             @Test
             @DisplayName("Should fail when receiver PIX key does not exist")
             public void shouldFail_WhenReceiverPixKeyDoesNotExists() {
-
-                BigDecimal amount = new BigDecimal("100"); // Amount to be transferred
-
                 // Arrange
-                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
+                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("100"));
 
-                PixKey senderPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(),
-                        keyType.CPF,
-                        request.getSenderAccountId());
+                PixKey senderPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
 
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.of(senderPixKey));
-                when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                        .thenReturn(Optional.empty());
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+                when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.empty());
 
                 // Assert - Response
                 WalletNotFoundException exception = assertThrows(WalletNotFoundException.class, () -> {
                     instantPayment.transferProcess(request);
                 });
+
                 assertNotNull(exception);
-                assertEquals( WalletNotFoundException.RECEIVER_CODE, exception.getErrorCode());
+                assertEquals(WalletNotFoundException.RECEIVER_CODE, exception.getErrorCode());
                 assertEquals(WalletNotFoundException.class, exception.getClass());
 
                 // Assert - Verify Operations were called
@@ -262,40 +192,15 @@ public class InstantPaymentTests {
             @Test
             @DisplayName("Should fail when max retry attempts are reached")
             public void shouldFail_WhenMaxRetryAttemptsAreReached() {
-
-                BigDecimal amount = new BigDecimal("10.00"); // Amount to be transferred
-                BigDecimal senderInitialBalance = new BigDecimal("10.00");
-
                 // Arrange
-                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
+                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("10.00"));
 
-                Wallet senderWallet = WalletFixture.createWallet(
-                        request.getSenderAccountId(),
-                        accountType.CHECKING,
-                        request.getSenderKey());
-                senderWallet.setBalance(senderInitialBalance);
+                PixKey senderPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
+                PixKey receiverPixKey = PixKeyFixture.createPixKey(request.getReceiverKey(), keyType.CPF, request.getReceiverAccountId());
 
-                Wallet receiverWallet = WalletFixture.createWallet(
-                        request.getReceiverAccountId(),
-                        accountType.CHECKING,
-                        request.getReceiverKey());
-
-                PixKey senderPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(),
-                        keyType.CPF,
-                        request.getSenderAccountId());
-
-                PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                        request.getReceiverKey(),
-                        keyType.CPF,
-                        request.getReceiverAccountId());
-
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.of(senderPixKey));
-                when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                        .thenReturn(Optional.of(receiverPixKey));
-                when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                        .thenReturn(false);
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+                when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.of(receiverPixKey));
+                when(transactionsProcessedRepository.existsById(any())).thenReturn(false);
 
                 doThrow(new OptimisticLockingFailureException("Concurrent update detected"))
                         .when(transferExecution).transferExecutionWithRetry(any(PixTransfer.class));
@@ -322,29 +227,15 @@ public class InstantPaymentTests {
             @Test
             @DisplayName("Should fail when an error occurred while save processed transaction")
             public void shouldFail_WhenAnErrorOccurredWhileSaveProcessedTransaction() {
-
-                BigDecimal amount = new BigDecimal("10.00");
-
                 // Arrange
-                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(amount);
+                TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("10.00"));
 
-                PixKey senderPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(),
-                        keyType.CPF,
-                        request.getSenderAccountId());
+                PixKey senderPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
+                PixKey receiverPixKey = PixKeyFixture.createPixKey(request.getReceiverKey(), keyType.CPF, request.getReceiverAccountId());
 
-                PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                        request.getReceiverKey(),
-                        keyType.CPF,
-                        request.getReceiverAccountId());
-
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.of(senderPixKey));
-                when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                        .thenReturn(Optional.of(receiverPixKey));
-                when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                        .thenReturn(false);
-
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+                when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.of(receiverPixKey));
+                when(transactionsProcessedRepository.existsById(any())).thenReturn(false);
 
                 doThrow(DataIntegrityViolationException.class)
                         .when(transactionsProcessedRepository).saveAndFlush(any(TransactionsProcessed.class));
@@ -373,20 +264,16 @@ public class InstantPaymentTests {
             void shouldReturnFailedTransfer_WhenTransferExecutionThrowsDomainException() {
                 TransactionDTO request = TransactionDTOFixture.createTransactionDTO(new BigDecimal("10.00"));
 
-                PixKey senderPixKey = PixKeyFixture.createPixKey(
-                        request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
-                PixKey receiverPixKey = PixKeyFixture.createPixKey(
-                        request.getReceiverKey(), keyType.CPF, request.getReceiverAccountId());
+                PixKey senderPixKey = PixKeyFixture.createPixKey(request.getSenderKey(), keyType.CPF, request.getSenderAccountId());
+                PixKey receiverPixKey = PixKeyFixture.createPixKey(request.getReceiverKey(), keyType.CPF, request.getReceiverAccountId());
 
-                when(pixKeyService.getWalletIdByKey(request.getSenderKey()))
-                        .thenReturn(Optional.of(senderPixKey));
-                when(pixKeyService.getWalletIdByKey(request.getReceiverKey()))
-                        .thenReturn(Optional.of(receiverPixKey));
-                when(transactionsProcessedRepository.existsById(UUID.fromString(request.getTransactionId())))
-                        .thenReturn(false);
+                when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.of(senderPixKey));
+                when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.of(receiverPixKey));
+                when(transactionsProcessedRepository.existsById(any())).thenReturn(false);
 
                 DomainException domainException = new DomainException("DOMAIN ERROR", "domain error") {
                 };
+
                 doThrow(domainException)
                         .when(transferExecution).transferExecutionWithRetry(any(PixTransfer.class));
 
