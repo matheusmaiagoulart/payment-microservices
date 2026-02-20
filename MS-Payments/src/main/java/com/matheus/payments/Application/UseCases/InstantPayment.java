@@ -1,10 +1,10 @@
-package com.matheus.payments.Application.Facades;
+package com.matheus.payments.Application.UseCases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.InstantPaymentFacadeAudit;
 import com.matheus.payments.Application.DTOs.TransactionRequest;
 import com.matheus.payments.Application.Services.OutboxService;
-import com.matheus.payments.Application.UseCases.PaymentProcessorService;
+import com.matheus.payments.Application.Services.PaymentProcessorService;
 import com.matheus.payments.Application.Services.TransactionService;
 
 import org.shared.DTOs.PaymentProcessorResponse;
@@ -19,7 +19,7 @@ import java.io.IOException;
  * @author Matheus Maia Goulart
  */
 @Service
-public class InstantPaymentFacade {
+public class InstantPayment {
 
 
     private final ObjectMapper objectMapper;
@@ -28,7 +28,7 @@ public class InstantPaymentFacade {
     private final TransactionService transactionService;
     private final PaymentProcessorService paymentProcessorService;
 
-    public InstantPaymentFacade
+    public InstantPayment
             (ObjectMapper objectMapper,
              OutboxService outboxService,
              InstantPaymentFacadeAudit audit,

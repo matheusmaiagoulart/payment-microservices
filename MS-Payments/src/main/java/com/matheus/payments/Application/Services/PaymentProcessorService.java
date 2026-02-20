@@ -1,13 +1,12 @@
-package com.matheus.payments.Application.UseCases;
+package com.matheus.payments.Application.Services;
 
 import com.matheus.payments.Application.Audit.PaymentProcessorAudit;
-import com.matheus.payments.Domain.Transaction;
-import com.matheus.payments.Domain.TransactionOutbox;
+import com.matheus.payments.Domain.Models.Transaction;
+import com.matheus.payments.Domain.Models.TransactionOutbox;
 import com.matheus.payments.Infra.Exceptions.Custom.FailedToSentException;
 import com.matheus.payments.Infra.Exceptions.Custom.TransactionAlreadySentException;
-import com.matheus.payments.Infra.Exceptions.Custom.TransactionFailedException;
-import com.matheus.payments.Infra.Exceptions.Custom.TransactionNotFound;
-import com.matheus.payments.instant.Infra.Exceptions.Custom.*;
+import com.matheus.payments.Domain.Exceptions.TransactionFailedException;
+import com.matheus.payments.Domain.Exceptions.TransactionNotFound;
 import com.matheus.payments.Infra.Http.WalletServer;
 import com.matheus.payments.Infra.Repository.OutboxRepository;
 import com.matheus.payments.Infra.Repository.TransactionRepository;
@@ -91,12 +90,12 @@ public class PaymentProcessorService {
 
     private Transaction getTransactionById(UUID transactionId) throws TransactionNotFound {
         return transactionRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new TransactionNotFound("Transaction with ID " + transactionId + " not found."));
+                .orElseThrow(() -> new TransactionNotFound(transactionId.toString()));
     }
 
     private TransactionOutbox getOutboxByTransactionId(String transactionId) throws TransactionNotFound {
         return outboxRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new TransactionNotFound("Transaction with ID " + transactionId + " not found."));
+                .orElseThrow(() -> new TransactionNotFound(transactionId));
     }
 
     private void ensureNotAlreadySent(TransactionOutbox transaction) throws TransactionAlreadySentException {
