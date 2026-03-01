@@ -71,14 +71,14 @@ public class LedgerServiceTests {
 
             // Verify debit entry
             WalletLedger debitEntry = capturedLedgers.get(0);
-            assertEquals(WalletLedger.EntryType.DEBIT, debitEntry.getEntryType());
+            assertEquals(WalletLedger.WalletEntryType.DEBIT, debitEntry.getEntryType());
             assertEquals(pixTransfer.getSenderPixKey().getAccountId(), debitEntry.getWalletId());
             assertEquals(pixTransfer.getReceiverPixKey().getAccountId(), debitEntry.getCounterpartyWalletId());
             assertEquals(pixTransfer.getAmount(), debitEntry.getAmount());
 
             // Verify credit entry
             WalletLedger creditEntry = capturedLedgers.get(1);
-            assertEquals(WalletLedger.EntryType.CREDIT, creditEntry.getEntryType());
+            assertEquals(WalletLedger.WalletEntryType.CREDIT, creditEntry.getEntryType());
             assertEquals(pixTransfer.getReceiverPixKey().getAccountId(), creditEntry.getWalletId());
             assertEquals(pixTransfer.getSenderPixKey().getAccountId(), creditEntry.getCounterpartyWalletId());
             assertEquals(pixTransfer.getAmount(), creditEntry.getAmount());
