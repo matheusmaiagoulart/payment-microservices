@@ -26,6 +26,7 @@ public class OutboxService {
 
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // Always create a new transaction for each outbox event
     public void createOutbox(UUID userId, String eventType, String topic, String payload) {
         Outbox outbox = new Outbox(userId, eventType, topic, payload);
         outboxRepository.save(outbox);
