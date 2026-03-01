@@ -1,6 +1,7 @@
 package com.matheus.payments.wallet.Infra.Kafka.Listeners.UserCreated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * @author Matheus Maia Goulart
  */
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class UserCreatedEvent {
