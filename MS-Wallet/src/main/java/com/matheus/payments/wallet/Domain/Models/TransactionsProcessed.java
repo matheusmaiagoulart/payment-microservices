@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -16,13 +17,12 @@ import java.util.UUID;
 
 @Getter
 @Entity
+@NoArgsConstructor
 @Table(name = "transactions_processed")
 public class TransactionsProcessed {
 
     @Id
     private UUID transactionId;
-
-    public TransactionsProcessed() {}
 
     public TransactionsProcessed(UUID transactionId) {
         this.transactionId = transactionId;
