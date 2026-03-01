@@ -1,7 +1,6 @@
-package com.matheus.payments.wallet.Application.Events;
+package com.matheus.payments.wallet.Application.Events.CreateWallet;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,7 +11,7 @@ import java.util.UUID;
  *
  * @author Matheus Maia Goulart
  */
-@Getter @Setter
+@Getter
 public class WalletCreationFailed {
     private final UUID userId;
     private final String cpf;
