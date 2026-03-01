@@ -13,13 +13,6 @@ public class InstantPaymentResponse {
     private UUID receiverAccountId;
     private String failedMessage;
 
-    public InstantPaymentResponse(boolean isSuccessful, boolean alreadyProcessed, UUID senderAccountId, UUID receiverAccountId, String failedMessage) {
-        this.isSucessful = isSuccessful;
-        this.alreadyProcessed = alreadyProcessed;
-        this.senderAccountId = senderAccountId;
-        this.receiverAccountId = receiverAccountId;
-        this.failedMessage = failedMessage ;
-    }
 
     public InstantPaymentResponse(boolean isSuccessful, boolean alreadyProcessed, UUID senderAccountId, UUID receiverAccountId) {
         this.isSucessful = isSuccessful;
@@ -27,5 +20,9 @@ public class InstantPaymentResponse {
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
         this.failedMessage = null;
+    }
+    public InstantPaymentResponse(boolean isSuccessful, boolean alreadyProcessed, UUID senderAccountId, UUID receiverAccountId, String failedMessage) {
+       this(isSuccessful, alreadyProcessed, senderAccountId, receiverAccountId);
+        this.failedMessage = failedMessage ;
     }
 }
