@@ -65,9 +65,9 @@ public class CreateWallet {
         return walletService.saveWallet(wallet);
     }
 
-    private PixKey createPixKey(UserCreatedEvent request, Wallet wallet) throws PersistenceException {
+    private void createPixKey(UserCreatedEvent request, Wallet wallet) throws PersistenceException {
         PixKey walletKeys = new PixKey(request.getKeyValue(), request.getKeyType(), wallet.getAccountId());
-        return pixKeyService.savePixKey(walletKeys);
+        pixKeyService.savePixKey(walletKeys);
     }
 
     private void publishSuccess(UserCreatedEvent request) {
