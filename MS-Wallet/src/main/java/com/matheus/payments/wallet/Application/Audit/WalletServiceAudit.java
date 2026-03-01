@@ -98,5 +98,17 @@ public class WalletServiceAudit {
         log.warn(message + keyValue, logData.toArray());
     }
 
+    public void logFailedToProcessMessage(String keyValue, String errorMessage) {
+        ArrayList<Object> logData = new ArrayList<>();
+
+        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, METHOD_NAME,
+                "Failed to process UserCreated event for key:" + keyValue));
+        logData.addAll(LogBuilder.eventLog("UserCreated", "UserCreated", keyValue));
+        logData.add(kv("event", "user_created.event.processing.failed"));
+        logData.add(kv("errorMessage", errorMessage));
+
+        log.error("Failed to process UserCreated event for key: " + keyValue, logData.toArray());
+    }
+
 
 }
