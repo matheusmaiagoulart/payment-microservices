@@ -30,12 +30,13 @@ public class DepositExecutedInternalEventHandler {
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handle(DepositExecuted event) throws JsonProcessingException {
         try {
-    outboxService.createOutbox(event.getReceiverId(), "DepositExecuted", KafkaTopics.DEPOSIT_EXECUTED_TOPIC, objectMapper.writeValueAsString(event));
-    } catch (JsonProcessingException | DataAccessException | PersistenceException e) {
-        log.error("Error while creating outbox entry for DepositExecuted for userId {}: {}", event.getReceiverId(), e.getMessage(),
-                LogBuilder.eventLog("DepositExecuted", KafkaTopics.DEPOSIT_EXECUTED_TOPIC, event.getReceiverId().toString()),
-                LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), getClass().getName(), "handler", e.getMessage()));
-        throw e;
+            outboxService.createOutbox(event.getReceiverId(), "DepositExecuted", KafkaTopics.DEPOSIT_EXECUTED_TOPIC, objectMapper.writeValueAsString(event));
+            log.info("DepositExecuted Event for id: {}: {}", event.getDepositId(), event.getAmount());
+        } catch (JsonProcessingException | DataAccessException | PersistenceException e) {
+            log.error("Error while creating outbox entry for DepositExecuted for depositId {}: {}", event.getDepositId(), e.getMessage(),
+                    LogBuilder.eventLog("DepositExecuted", KafkaTopics.DEPOSIT_EXECUTED_TOPIC, event.getReceiverId().toString()),
+                    LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), getClass().getName(), "handler", e.getMessage()));
+            throw e;
         }
     }
 }
