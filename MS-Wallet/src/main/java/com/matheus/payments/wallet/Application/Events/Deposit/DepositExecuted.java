@@ -9,12 +9,14 @@ import java.util.UUID;
 @Getter
 public class DepositExecuted {
 
+    private UUID depositId;
     private UUID receiverId;
     private BigDecimal amount;
     private boolean successful;
     private LocalDateTime timestamp;
 
-    public DepositExecuted(UUID userId, BigDecimal amount) {
+    public DepositExecuted(UUID depositId, UUID userId, BigDecimal amount) {
+        this.depositId = depositId;
         this.receiverId = userId;
         this.amount = amount;
         this.successful = true;
