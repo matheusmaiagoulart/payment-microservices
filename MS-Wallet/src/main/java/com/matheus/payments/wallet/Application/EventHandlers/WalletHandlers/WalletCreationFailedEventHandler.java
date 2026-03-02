@@ -22,10 +22,11 @@ public class WalletCreationFailedEventHandler {
         this.outboxService = outboxService;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handler(WalletCreationFailed event) throws JsonProcessingException {
         try {
             outboxService.createOutbox(event.getUserId(), "WalletCreationFailed", KafkaTopics.WALLET_CREATION_FAILED_TOPIC, objectMapper.writeValueAsString(event));
+            log.info("WalletCreation fail reason: {}", event.getErrorMessage());
         } catch (JsonProcessingException e) {
             log.error("Failed to create outbox entry for WalletCreationFailed event for userId {}: {}", event.getUserId(), e.getMessage());
             throw e;

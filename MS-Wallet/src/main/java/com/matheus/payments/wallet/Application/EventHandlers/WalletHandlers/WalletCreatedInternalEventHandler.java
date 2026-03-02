@@ -35,7 +35,7 @@ public class WalletCreatedInternalEventHandler {
         this.outboxService = outboxService;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handler(WalletCreatedEvent event) throws JsonProcessingException {
         try {
             outboxService.createOutbox(event.getUserId(), "WalletCreated", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, objectMapper.writeValueAsString(event));
