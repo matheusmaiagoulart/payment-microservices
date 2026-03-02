@@ -41,13 +41,11 @@ public class InstantPayment {
         PixTransfer pixTransfer = createPixTransfer(request); // Get all necessary data for the transfer
 
         try {
-            checkTransactionAlreadyProcessed(UUID.fromString(request.getTransactionId())); // Idempotency validation
+            saveProcessedTransaction(pixTransfer.getTransactionId());
 
             sameUserValidation(pixTransfer.getSenderPixKey().getAccountId(), pixTransfer.getReceiverPixKey().getAccountId());
 
             transferExecution.transferExecutionWithRetry(pixTransfer);
-
-            saveProcessedTransaction(pixTransfer.getTransactionId());
 
             return successTransfer(pixTransfer);
         }
@@ -84,19 +82,6 @@ public class InstantPayment {
         // Same user validation
         if (senderWalletId.equals(receiverWalletId)) {
             throw new SameUserException("Sender and Receiver cannot be the same");
-        }
-    }
-
-    /**
-     * This method checks if the transaction was already processed, ensuring idempotency.
-     *
-     * @param transactionId
-     * @throws TransactionAlreadyProcessed
-     */
-    private void checkTransactionAlreadyProcessed(UUID transactionId) {
-        var result = transactionsProcessedRepository.existsById(transactionId);
-        if (result) {
-            throw new TransactionAlreadyProcessed();
         }
     }
 
