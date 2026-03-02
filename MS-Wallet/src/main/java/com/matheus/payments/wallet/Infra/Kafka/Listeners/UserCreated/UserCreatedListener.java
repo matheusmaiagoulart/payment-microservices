@@ -30,8 +30,7 @@ public class UserCreatedListener {
 
     @KafkaListener(topics = KafkaTopics.USER_CREATED_EVENT_TOPIC, groupId = ApplicationData.APPLICATION_CONSUMER_GROUP)
     public void createUserWalletListener(ConsumerRecord<String, String> message, Acknowledgment ack) {
-        String correlationId = new String(message.headers().lastHeader("correlationId").value());
-        CorrelationId.set(correlationId); // Set correlationId on MDC to be able to get it on audits logs
+        getCorrelation(message);
         UserCreatedEvent request = null;
 
         try {
@@ -53,5 +52,10 @@ public class UserCreatedListener {
 
     private UserCreatedEvent parseMessage(String message) throws JsonProcessingException {
         return objectMapper.readValue(message, UserCreatedEvent.class);
+    }
+
+    private void getCorrelation(ConsumerRecord<String, String> message) {
+        String correlationId = new String(message.headers().lastHeader("correlationId").value());
+        CorrelationId.set(correlationId); // Set correlationId on MDC to be able to get it on audits logs
     }
 }
