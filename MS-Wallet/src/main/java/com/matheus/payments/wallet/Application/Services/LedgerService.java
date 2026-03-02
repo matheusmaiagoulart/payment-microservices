@@ -4,6 +4,7 @@ import com.matheus.payments.wallet.Application.Audit.LedgerAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
 import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class LedgerService {
      * @param pixTransfer Data transfer context
      * @throws FailedToSaveLedgeEntry
      */
+
     public void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
         String transactionId = pixTransfer.getTransactionId().toString();
         UUID senderWalletId = pixTransfer.getSenderPixKey().getAccountId();
@@ -42,6 +44,22 @@ public class LedgerService {
             walletLedgeRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, pixTransfer.getSenderPixKey().getKeyValue());
+            throw new FailedToSaveLedgeEntry(transactionId);
+        }
+    }
+
+    public void registryDepositEntryLedge(DepositCreated deposit) {
+        String transactionId = deposit.getDepositId().toString();
+        UUID senderWalletId = deposit.getSenderId();
+        UUID receiverWalletId = deposit.getReceiverId();
+        BigDecimal amount = deposit.getAmount();
+
+        WalletLedger entryCredit = new WalletLedger().createDepositEntry(transactionId, receiverWalletId, amount);
+
+        try {
+            walletLedgeRepository.saveAndFlush(entryCredit);
+        } catch (DataIntegrityViolationException e) {
+            audit.logFailedCreateLedgerEntries(transactionId, senderWalletId.toString());
             throw new FailedToSaveLedgeEntry(transactionId);
         }
     }
