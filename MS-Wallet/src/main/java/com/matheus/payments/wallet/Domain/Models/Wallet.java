@@ -64,10 +64,14 @@ public class Wallet {
 
     public void creditAccount(BigDecimal amount) {
         BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.HALF_UP); // Ensure amount has 2 decimal places, and round up if necessary
+
+        if (normalizedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException();
+        }
         this.balance = this.balance.add(normalizedAmount).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public boolean sufficientBalanceValidation(BigDecimal amount) {
+    private boolean sufficientBalanceValidation(BigDecimal amount) {
         // If balance >= amount, return true
         return this.balance.compareTo(amount) >= 0;
     }
