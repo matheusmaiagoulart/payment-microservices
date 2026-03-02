@@ -13,14 +13,22 @@ resilience4j.circuitbreaker:
 
 ---
 #Retry Configuration
-retry:
+resilience4j.retry:
   instances:
     databaseRetry:
       maxAttempts: 3
-      waitDuration: 1000
+      waitDuration: 2000
+      exponentialBackoffMultiplier: 2
       retryExceptions:
         - org.springframework.dao.DataAccessException
         - java.sql.SQLException
-
+        - org.springframework.dao.OptimisticLockingFailureException
+        - org.springframework.dao.TransientDataAccessException
+      ignoreExceptions:
+        - com.matheus.payments.wallet.Domain.Exceptions.WalletNotFoundException
+        - com.matheus.payments.wallet.Domain.Exceptions.InsufficientBalanceException
+        - com.matheus.payments.wallet.Domain.Exceptions.SameUserException
+        - com.matheus.payments.wallet.Domain.Exceptions.DomainException
+        - com.matheus.payments.wallet.Domain.Exceptions.DepositAlreadyProcessed
 
 
