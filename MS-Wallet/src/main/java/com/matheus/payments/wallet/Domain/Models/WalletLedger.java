@@ -32,15 +32,19 @@ public class WalletLedger {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private EntryType entryType;
+    private TransactionType transactionType;
+
+    @Enumerated(EnumType.STRING)
+    private WalletEntryType entryType;
 
     private LocalDateTime timestamp;
 
     public WalletLedger() {}
 
-    public WalletLedger(UUID transactionId, UUID walletId, UUID counterpartyWalletId, BigDecimal amount, EntryType entryType, LocalDateTime timestamp) {
+    public WalletLedger(UUID transactionId, UUID walletId, UUID counterpartyWalletId, BigDecimal amount, TransactionType transactionType, WalletEntryType entryType, LocalDateTime timestamp) {
         this.transactionId = transactionId;
         this.walletId = walletId;
+        this.transactionType = transactionType;
         this.counterpartyWalletId = counterpartyWalletId;
         this.amount = amount;
         this.entryType = entryType;
@@ -48,15 +52,24 @@ public class WalletLedger {
     }
 
     public WalletLedger createDebitEntry(String transactionId, UUID walletId, UUID counterpartyWalletId, BigDecimal amount) {
-        return new WalletLedger(UUID.fromString(transactionId), walletId, counterpartyWalletId, amount, EntryType.DEBIT, LocalDateTime.now());
+        return new WalletLedger(UUID.fromString(transactionId), walletId, counterpartyWalletId, amount, TransactionType.INSTANT_PAYMENT, WalletEntryType.DEBIT, LocalDateTime.now());
     }
 
     public WalletLedger createCreditEntry(String transactionId, UUID walletId, UUID counterpartyWalletId, BigDecimal amount) {
-        return new WalletLedger(UUID.fromString(transactionId), walletId, counterpartyWalletId, amount, EntryType.CREDIT, LocalDateTime.now());
+        return new WalletLedger(UUID.fromString(transactionId), walletId, counterpartyWalletId, amount, TransactionType.INSTANT_PAYMENT, WalletEntryType.CREDIT, LocalDateTime.now());
     }
 
-    public enum EntryType {
+    public WalletLedger createDepositEntry(String transactionId, UUID walletId, BigDecimal amount) {
+        return new WalletLedger(UUID.fromString(transactionId), walletId, walletId, amount, TransactionType.DEPOSIT, WalletEntryType.CREDIT, LocalDateTime.now());
+    }
+
+    public enum WalletEntryType {
         DEBIT,
         CREDIT
+    }
+
+    public enum TransactionType {
+        INSTANT_PAYMENT,
+        DEPOSIT,
     }
 }
