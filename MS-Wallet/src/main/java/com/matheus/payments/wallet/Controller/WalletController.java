@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Api.Controller;
+package com.matheus.payments.wallet.Controller;
 
 import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Application.DTOs.Response.InstantPaymentResponse;
@@ -29,7 +29,6 @@ public class WalletController {
             if (!result.isSucessful()) {
                 return PaymentProcessorResponse.failedResponse(result.isAlreadyProcessed(), UUID.fromString(request.getTransactionId()), result.getSenderAccountId(), result.getReceiverAccountId(), result.getFailedMessage());
             }
-
             return PaymentProcessorResponse.successResponse(UUID.fromString(request.getTransactionId()), result.getSenderAccountId(), result.getReceiverAccountId());
 
         } finally {
