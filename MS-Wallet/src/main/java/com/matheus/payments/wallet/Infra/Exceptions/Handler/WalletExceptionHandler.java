@@ -57,4 +57,11 @@ public class WalletExceptionHandler {
         HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.INTERNAL_SERVER_ERROR, concurrentTransactionException.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(handlerMessage);
     }
+
+    @ExceptionHandler(ErrorToSaveOutboxException.class)
+    public ResponseEntity<HandlerMessage> ErrorToSaveOutboxException(ErrorToSaveOutboxException errorToSaveOutboxException) {
+        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.INTERNAL_SERVER_ERROR, errorToSaveOutboxException.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(handlerMessage);
+    }
+
 }
