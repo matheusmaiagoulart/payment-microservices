@@ -8,6 +8,6 @@ import java.util.UUID;
 public class OutboxFixture {
 
     public static Outbox createOutbox() {
-        return new Outbox(UUID.randomUUID(), "EventTest", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, "{\"transactionId\":\"" + UUID.randomUUID() + "\", \"amount\": 100.0}");
+        return new Outbox(UUID.randomUUID(),UUID.randomUUID().toString(), "EventTest", KafkaTopics.WALLET_CREATED_EVENT_TOPIC, "{\"transactionId\":\"" + UUID.randomUUID() + "\", \"amount\": 100.0}");
     }
 }

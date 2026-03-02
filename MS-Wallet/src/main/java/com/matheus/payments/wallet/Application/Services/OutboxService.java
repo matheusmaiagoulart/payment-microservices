@@ -1,6 +1,8 @@
 package com.matheus.payments.wallet.Application.Services;
 
+import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.ErrorToSaveOutboxException;
 import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -25,16 +27,16 @@ public class OutboxService {
         this.outboxRepository = outboxRepository;
 
     }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // Always create a new transaction for each outbox event
+    @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToSaveOutboxEvent")
+    @Transactional(propagation = Propagation.REQUIRED)
     public void createOutbox(UUID userId, String eventType, String topic, String payload) {
-        Outbox outbox = new Outbox(userId, eventType, topic, payload);
+        Outbox outbox = new Outbox(userId, CorrelationId.get(), eventType, topic, payload);
         outboxRepository.save(outbox);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // Always create a new transaction for each outbox event
+    @Transactional(propagation = Propagation.REQUIRED)
     @CircuitBreaker(name = "outboxScheduler", fallbackMethod = "handleErrorToSendOutboxEvent")
-    @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToSaveOutboxEvent")
+    @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToSendOutboxEventRetry")
     public void sendOutboxEvent(Outbox outbox) throws ExecutionException, InterruptedException {
         publisher.send(outbox.getTopic(), outbox.getPayload());
         setOutboxSent(outbox);
@@ -53,12 +55,20 @@ public class OutboxService {
 
     // Fallback method for Circuit Breaker
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // Need requires new to ensure that the fallback method runs in a separate transaction
+    @Transactional(propagation = Propagation.REQUIRED)
     private void handleErrorToSendOutboxEvent(Outbox outbox, Throwable throwable) {
         setOutboxFailed(outbox, "Circuit breaker opened, the message was not sent. Cause: " + throwable.getCause());
     }
 
-    private void handleErrorToSaveOutboxEvent(Outbox outbox, Throwable throwable) {
-        log.error("Error to save Outbox event with id: {}. Cause: {}", outbox.getId(), throwable.getCause());
+    private void handleErrorToSaveOutboxEvent(UUID userId, String eventType, String topic, String payload, Throwable throwable) {
+        log.error("Fallback: Error to save Outbox for userId: {}, eventType: {}. Cause: {}",
+                userId, eventType, throwable.getMessage());
+        throw new ErrorToSaveOutboxException();
+    }
+
+    private void handleErrorToSendOutboxEventRetry(Outbox outbox, Throwable throwable) {
+        log.error("Retry fallback: Error to send Outbox id: {}. Cause: {}",
+                outbox.getId(), throwable.getMessage());
+        setOutboxFailed(outbox, "Retry failed: " + throwable.getMessage());
     }
 }

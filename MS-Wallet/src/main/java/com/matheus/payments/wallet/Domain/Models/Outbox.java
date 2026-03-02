@@ -22,6 +22,7 @@ public class Outbox {
     private UUID id;
 
     private UUID userId;
+    private UUID correlationId;
     private String eventType;
     private String topic;
     @Column(columnDefinition = "json")
@@ -33,9 +34,10 @@ public class Outbox {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Outbox(UUID userId, String eventType, String topic, String payload) {
+    public Outbox(UUID userId, String correlationId, String eventType, String topic, String payload) {
         this.id = UUID.randomUUID();
         this.userId = userId;
+        this.correlationId = UUID.fromString(correlationId);
         this.topic = topic;
         this.eventType = eventType;
         this.payload = payload;
