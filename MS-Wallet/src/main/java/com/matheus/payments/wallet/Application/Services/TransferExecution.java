@@ -38,7 +38,7 @@ public class TransferExecution {
      * @throws OptimisticLockingFailureException If concurrent update conflict occurs (will be retried)
      */
     @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToExecuteTransfer")
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRED)
     public void transferExecutionWithRetry(PixTransfer pixTransfer) throws DomainException, FailedToSaveLedgeEntry {
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
@@ -64,5 +64,36 @@ public class TransferExecution {
             audit.logFailedGeneric(pixTransfer.getTransactionId().toString(), e.getMessage());
             throw e;
         }
+    }
+
+    @Retry(name = "databaseRetry")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void depositExecution(DepositCreated data) {
+        Wallet receiverWallet = walletService.getWalletById(data.getReceiverId())
+                .orElseThrow(WalletNotFoundException::receiverNotFound);
+
+        receiverWallet.creditAccount(data.getAmount());
+
+        registryDepositEntryLedge(data);
+
+        walletService.saveWallet(receiverWallet);
+    }
+
+    private void registryDepositEntryLedge(DepositCreated data) throws FailedToSaveLedgeEntry {
+        try {
+            ledgerService.registryDepositEntryLedge(data);
+        } catch (FailedToSaveLedgeEntry e) {
+            audit.logFailedGeneric(data.getDepositId().toString(), e.getMessage());
+            throw e;
+        }
+    }
+
+    private void handleErrorToExecuteTransfer(PixTransfer pixTransfer, Throwable throwable) {
+        log.error("Error to execute Transfer with transactionId: {}. Cause: {}", pixTransfer.getTransactionId(), throwable.getMessage());
+
+        if(throwable instanceof RuntimeException) {
+            throw (RuntimeException) throwable;
+        }
+        throw new RuntimeException(throwable);
     }
 }
