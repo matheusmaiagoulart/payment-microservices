@@ -1,18 +1,22 @@
-package com.matheus.payments.Domain;
+package com.matheus.payments.Domain.Models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Document(collection = "transactions")
+
 @NoArgsConstructor
 @Getter @Setter
+@Entity
+@Table(name = "transactions")
+
 public class Transaction {
 
     @Id
