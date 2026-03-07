@@ -26,11 +26,11 @@ import java.util.concurrent.TimeoutException;
  */
 
 @Service
-public class WalletServer {
+public class WalletService {
 
     private final HttpClient responseClient;
 
-    public WalletServer() throws Exception {
+    public WalletService() throws Exception {
         // Carrega o truststore
         KeyStore trustStore = KeyStore.getInstance("JKS");
         try (InputStream trustStream = new ClassPathResource("Certifications/truststore.jks").getInputStream()) {
