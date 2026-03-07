@@ -23,4 +23,6 @@ public class CorrelationId {
     public static void clear() {
         MDC.clear();
     }
+
+    public static void set(String correlationId) { MDC.put(CORRELATION_ID, correlationId); }
 }
