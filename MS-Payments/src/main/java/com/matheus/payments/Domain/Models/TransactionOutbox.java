@@ -1,11 +1,14 @@
-package com.matheus.payments.Domain;
+package com.matheus.payments.Domain.Models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Represents a Transaction Outbox Pattern entry for reliable message delivery.
@@ -16,21 +19,27 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
-@Document(collection = "transaction_outbox")
+@Entity
+@NoArgsConstructor
+@Table(name = "transaction_outbox")
 public class TransactionOutbox {
 
     @Id
     private String transactionId;
+    private String topic;
     private String payload;
+    private UUID correlationId;
     private Boolean sent;
     private Boolean failed;
     private LocalDateTime createdAt;
     private String failureReason;
     private LocalDateTime failureAt;
 
-    public TransactionOutbox(String transactionId, String payload) {
+    public TransactionOutbox(String transactionId, String payload, String correlationId, String topic) {
         this.transactionId = transactionId;
+        this.topic = topic;
         this.payload = payload;
+        this.correlationId = UUID.fromString(correlationId);
         this.sent = false;
         this.failed = false;
         this.createdAt = LocalDateTime.now();
