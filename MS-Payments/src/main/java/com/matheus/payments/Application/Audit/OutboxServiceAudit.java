@@ -13,7 +13,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 @Component
 public class OutboxServiceAudit {
 
-    public static final String REQUEST_FROM = "/transaction/pix";
+    public static final String REQUEST_FROM = "/transaction/deposit";
     public static final String CLASS_NAME = "OutboxService";
 
 
