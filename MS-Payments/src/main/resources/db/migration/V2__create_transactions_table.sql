@@ -12,6 +12,5 @@ CREATE TABLE transactions (
 CREATE INDEX idx_transactions_sender_account_id ON transactions(sender_account_id);
 CREATE INDEX idx_transactions_receiver_account_id ON transactions(receiver_account_id);
 CREATE INDEX idx_transactions_status ON transactions(status);
-CREATE INDEX idx_transactions_timestamp ON transactions(timestamp DESC);
 CREATE INDEX idx_transactions_sender_key ON transactions(sender_key);
 CREATE INDEX idx_transactions_receiver_key ON transactions(receiver_key);
