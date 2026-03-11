@@ -1,17 +1,18 @@
 package com.matheus.payments.Application.Services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.PaymentProcessorAudit;
 import com.matheus.payments.Domain.Models.Transaction;
-import com.matheus.payments.Domain.Models.TransactionOutbox;
+import com.matheus.payments.Domain.Models.TransactionIdempotency;
 import com.matheus.payments.Infra.Exceptions.Custom.FailedToSentException;
 import com.matheus.payments.Infra.Exceptions.Custom.TransactionAlreadySentException;
 import com.matheus.payments.Domain.Exceptions.TransactionFailedException;
-import com.matheus.payments.Domain.Exceptions.TransactionNotFound;
-import com.matheus.payments.Infra.Http.WalletServer;
-import com.matheus.payments.Infra.Repository.OutboxRepository;
-import com.matheus.payments.Infra.Repository.TransactionRepository;
+import com.matheus.payments.Infra.Http.WalletService;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.shared.DTOs.PaymentProcessorResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
@@ -22,84 +23,72 @@ import java.util.concurrent.TimeoutException;
 public class PaymentProcessorService {
 
     private final PaymentProcessorAudit audit;
-    private final OutboxRepository outboxRepository;
-    private final WalletServer walletServerRequest;
-    private final TransactionRepository transactionRepository;
+    private final ObjectMapper mapper;
+    private final TransactionIdempotencyService idempotencyService;
+    private final WalletService walletServerRequest;
+    private final TransactionService transactionService;
 
-    public PaymentProcessorService(OutboxRepository outboxRepository, WalletServer walletServerRequest, TransactionRepository transactionRepository, PaymentProcessorAudit audit) {
+    public PaymentProcessorService(TransactionIdempotencyService idempotencyService, ObjectMapper mapper, WalletService walletServerRequest, TransactionService transactionService, PaymentProcessorAudit audit) {
         this.audit = audit;
-        this.outboxRepository = outboxRepository;
+        this.mapper = mapper;
+        this.idempotencyService = idempotencyService;
+        this.transactionService = transactionService;
         this.walletServerRequest = walletServerRequest;
-        this.transactionRepository = transactionRepository;
     }
 
-    public String sendPaymentToProcessor(String transactionId) {
 
-        var outbox = getOutboxByTransactionId(transactionId);
-        ensureNotAlreadySent(outbox);
-        String payloadJson = outbox.getPayload();
-        String response;
+    public PaymentProcessorResponse sendPaymentToProcessor(String transactionId) {
         try {
-            audit.logSendingRequestWallet(transactionId); // LOG
-            response = sendToWalletServer(payloadJson);
+            TransactionIdempotency transactionIdempotency = idempotencyService.getByTransactionId(UUID.fromString(transactionId));
+            ensureNotAlreadySent(transactionIdempotency);
+            String payloadJson = transactionIdempotency.getPayload();
+            PaymentProcessorResponse response = executeAndParseRequest(payloadJson, transactionId);
 
+            audit.logSentSuccessfullyWallet(transactionId); // LOG
+            idempotencyService.setTransactionSent(transactionIdempotency);
+            return response;
         } catch (FailedToSentException e) {
             audit.logErrorSendingRequestWallet(transactionId, e); // LOG
             PaymentProcessorResponse failedResponse = PaymentProcessorResponse.connectionFailed(UUID.fromString(transactionId));
             paymentStatusUpdate(failedResponse);
             throw e;
         }
-
-        audit.logSentSuccessfullyWallet(transactionId); // LOG
-
-        outbox.setSent(true);
-        outboxRepository.save(outbox);
-        return response;
     }
 
-    public PaymentProcessorResponse paymentStatusUpdate(PaymentProcessorResponse response) {
+    private PaymentProcessorResponse executeAndParseRequest(String payloadJson, String transactionId) throws FailedToSentException {
+        audit.logSendingRequestWallet(transactionId);
+        String walletResponse = sendToWalletServer(payloadJson);
+        try {
+            return mapper.readValue(walletResponse, PaymentProcessorResponse.class);
+        }
+        catch (JsonProcessingException e) {
+            audit.logErrorToParseResponseInformations(transactionId, walletResponse, e.getMessage()); // LOG
+            throw new FailedToSentException("An error occurred while processing the response from the payment processor. Please try again later!");
+        }
+    }
 
-        Transaction transaction = getTransactionById(response.getTransactionId());
-        TransactionOutbox outbox = getOutboxByTransactionId(response.getTransactionId().toString());
+    @Retry(name = "databaseRetry")
+    @Transactional
+    public PaymentProcessorResponse paymentStatusUpdate(PaymentProcessorResponse response) {
+        Transaction transaction = transactionService.getTransactionById(response.getTransactionId());
+        TransactionIdempotency transactionIdempotency = idempotencyService.getByTransactionId(response.getTransactionId());
 
         if (!response.getIsSent()) {
-            audit.logReceivedNotSentResponse(response.getTransactionId().toString()); // LOG
-            handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
-            throw new FailedToSentException(response.getFailedMessage());
+            return handleFailed(response, transaction, transactionIdempotency);
         }
-
-        if(response.isAlreadyProcessed()){
-            audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
-            audit.logReceivedSuccessResponse(transaction.getTransactionId().toString()); // LOG
-            return PaymentProcessorResponse.responseAlreadyProcessed(transaction.getTransactionId(), transaction.getSenderAccountId(), transaction.getReceiverAccountId(), transaction.getTimestamp());
+        if (response.isAlreadyProcessed()) {
+            return handleAlreadyProcessed(transaction);
         }
-
         if (!response.getIsSuccessful()) {
-            audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
-            audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
-            handleFailedTransaction(response.getFailedMessage(), transaction, outbox);
-            throw new TransactionFailedException(response.getFailedMessage());
+            return handleFailed(response, transaction, transactionIdempotency);
         }
 
         audit.logReceivedSuccessResponse(transaction.getTransactionId().toString()); // LOG
-
-        transaction.setTransactionCompleted(response.getSenderAccountId(), response.getReceiverAccountId());
-        transactionRepository.save(transaction);
-        return response;
+        return handleSuccess(response, transaction);
     }
 
-    private Transaction getTransactionById(UUID transactionId) throws TransactionNotFound {
-        return transactionRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new TransactionNotFound(transactionId.toString()));
-    }
-
-    private TransactionOutbox getOutboxByTransactionId(String transactionId) throws TransactionNotFound {
-        return outboxRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new TransactionNotFound(transactionId));
-    }
-
-    private void ensureNotAlreadySent(TransactionOutbox transaction) throws TransactionAlreadySentException {
-         if (transaction.getSent()) {
+    private void ensureNotAlreadySent(TransactionIdempotency transaction) throws TransactionAlreadySentException {
+        if (transaction.getSent()) {
             throw new TransactionAlreadySentException("Transaction with ID " + transaction.getTransactionId() + " has already been sent.");
         }
     }
@@ -108,23 +97,46 @@ public class PaymentProcessorService {
         try {
             HttpResponse<String> response = walletServerRequest.instantPaymentRequest(payloadJson);
             return response.body();
-
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             throw new FailedToSentException("Error sending payment to processor occurred while trying to reach Wallet Server. The payment could not be processed!");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new FailedToSentException("An error occurred while we processing your payment request. Please try again later!");
-        } catch (TimeoutException e) {
-            throw new FailedToSentException("Timeout occurred while trying to reach Wallet Server. The request took too long to complete!");
         }
     }
 
-    private void handleFailedTransaction(String failedMessage, Transaction transaction, TransactionOutbox outbox) {
-        outbox.failedTransaction(failedMessage);
-        outboxRepository.save(outbox);
+    @Retry(name = "databaseRetry")
+    @Transactional
+    public void handleFailedTransaction(String failedMessage, Transaction transaction, TransactionIdempotency transactionIdempotency) {
+        transactionIdempotency.failedTransaction(failedMessage);
+        idempotencyService.save(transactionIdempotency);
 
         transaction.setTransactionFailed();
-        transactionRepository.save(transaction);
+        transactionService.save(transaction);
+    }
+
+    private PaymentProcessorResponse handleFailed(PaymentProcessorResponse response, Transaction transaction, TransactionIdempotency idempotency) {
+        audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
+        audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
+        handleFailedTransaction(response.getFailedMessage(), transaction, idempotency);
+        throw new TransactionFailedException(response.getFailedMessage());
+    }
+
+    private PaymentProcessorResponse handleSuccess(PaymentProcessorResponse response, Transaction transaction) {
+        audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
+        transaction.setTransactionCompleted(response.getSenderAccountId(), response.getReceiverAccountId());
+        transactionService.save(transaction);
+        return response;
+    }
+
+    private PaymentProcessorResponse handleAlreadyProcessed(Transaction transaction) {
+        audit.logReceivedSuccessResponse(transaction.getTransactionId().toString());
+        return PaymentProcessorResponse.responseAlreadyProcessed(
+                transaction.getTransactionId(),
+                transaction.getSenderAccountId(),
+                transaction.getReceiverAccountId(),
+                transaction.getTimestamp());
+
     }
 }
 
