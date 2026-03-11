@@ -3,10 +3,12 @@ package com.matheus.payments.Application.Services;
 import com.matheus.payments.Application.Audit.TransactionServiceAudit;
 import com.matheus.payments.Application.DTOs.TransactionRequest;
 import com.matheus.payments.Application.Mappers.TransactionMapper;
-import com.matheus.payments.Domain.Transaction;
-import com.matheus.payments.Infra.Exceptions.Custom.DataBaseException;
-import com.matheus.payments.Infra.Repository.TransactionRepository;
+import com.matheus.payments.Domain.Exceptions.TransactionNotFound;
+import com.matheus.payments.Domain.Models.Transaction;
+import com.matheus.payments.Domain.Repositories.TransactionRepository;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -36,8 +38,9 @@ public class TransactionService {
 
     }
 
+    @Retry(name = "databaseRetry", fallbackMethod = "fallbackCreatePaymentProcess")
+    @Transactional
     public String createPaymentProcess(TransactionRequest request) {
-        try {
             // Create Transaction Entity
             Transaction transaction = transactionMappers.mapToEntity(request);
             UUID transactionId = transaction.getTransactionId();
@@ -46,10 +49,28 @@ public class TransactionService {
 
             transactionRepository.save(transaction);
             return transaction.getTransactionId().toString();
-
-        } catch (DataBaseException e) {
-            audit.logErrorCreateTransaction(e.getMessage());
-            throw new DataBaseException("An error occurred while saving Transaction for request: " + request.toString());
-        }
     }
+
+    public Transaction getTransactionById(UUID transactionId) throws TransactionNotFound {
+        return transactionRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new TransactionNotFound(transactionId.toString()));
+    }
+
+    @Retry(name = "databaseRetry", fallbackMethod = "fallbackSave")
+    @Transactional
+    public void save(Transaction transaction) {
+            transactionRepository.save(transaction);
+    }
+
+    private String fallbackCreatePaymentProcess(TransactionRequest request, Throwable t) throws Throwable {
+        audit.logErrorCreateTransaction(t.getMessage());
+        throw t;
+    }
+
+    private void fallbackSave(Transaction transaction, Throwable t) throws Throwable {
+        audit.logErrorCreateTransaction(t.getMessage());
+        throw t;
+    }
+
+
 }
