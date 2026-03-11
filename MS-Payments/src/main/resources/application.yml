@@ -1,0 +1,44 @@
+#application.yml
+
+---
+#Circuit Breaker Configuration
+resilience4j.circuitbreaker:
+  instances:
+    defaultCircuitBreaker:
+      minimumNumberOfCalls: 10 #Minimum number of calls to evaluate the failure rate
+      failureRateThreshold: 50 #Minimun failure percentage to open circuit breaker
+      slidingWindowSize: 30 #Number of calls to consider for calculating failure rate
+      permittedNumberOfCallsInHalfOpenState: 3 #Number of calls allowed in half-open state before deciding to open or close the circuit breaker
+      waitDurationInOpenState: 15000  #Time to wait before send new messages to the service and test if it is available again
+
+---
+#Retry Configuration
+resilience4j.retry:
+  instances:
+    databaseRetry:
+      maxAttempts: 3
+      waitDuration: 2000
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      retryExceptions:
+        - org.springframework.dao.DataAccessException
+        - java.sql.SQLException
+        - org.springframework.dao.OptimisticLockingFailureException
+        - org.springframework.dao.TransientDataAccessException
+    walletServiceRetry:
+      maxAttempts: 3
+      waitDuration: 2000
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      retryExceptions:
+        - java.lang.InterruptedException
+        - java.io.IOException
+    kafkaRetry:
+      maxAttempts: 3
+      waitDuration: 2000
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      retryExceptions:
+        - java.lang.InterruptedException
+        - java.util.concurrent.ExecutionException
+
