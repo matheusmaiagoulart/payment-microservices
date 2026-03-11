@@ -3,8 +3,8 @@ package com.matheus.payments.Application.UseCases;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.InstantPaymentFacadeAudit;
 import com.matheus.payments.Application.DTOs.TransactionRequest;
-import com.matheus.payments.Application.Services.OutboxService;
 import com.matheus.payments.Application.Services.PaymentProcessorService;
+import com.matheus.payments.Application.Services.TransactionIdempotencyService;
 import com.matheus.payments.Application.Services.TransactionService;
 
 import org.shared.DTOs.PaymentProcessorResponse;
@@ -23,42 +23,40 @@ public class InstantPayment {
 
 
     private final ObjectMapper objectMapper;
-    private final OutboxService outboxService;
+    private final TransactionIdempotencyService idempotencyService;
     private final InstantPaymentFacadeAudit audit;
     private final TransactionService transactionService;
     private final PaymentProcessorService paymentProcessorService;
 
     public InstantPayment
             (ObjectMapper objectMapper,
-             OutboxService outboxService,
+             TransactionIdempotencyService idempotencyService,
              InstantPaymentFacadeAudit audit,
              TransactionService transactionService,
              PaymentProcessorService paymentProcessorService) {
         this.audit = audit;
         this.objectMapper = objectMapper;
-        this.outboxService = outboxService;
+        this.idempotencyService = idempotencyService;
         this.transactionService = transactionService;
         this.paymentProcessorService = paymentProcessorService;
     }
-
+    
     public PaymentProcessorResponse paymentOrchestration(TransactionRequest request) throws IOException {
 
-        String transactionId = transactionService.createPaymentProcess(request);
-        request.setTransactionId(transactionId);
+        String transactionId = initializeTransaction(request);
 
-        // Create Outbox Entry
-        outboxService.createOutboxEntry(transactionId, objectMapper.writeValueAsString(request));
-
-        audit.logPaymentProcessStarting(transactionId); // LOG
-
-        // Send payment to processor (Wallet Service)
-        String processorResponseJson = paymentProcessorService.sendPaymentToProcessor(transactionId);
-
-        // Convert JSON response to PaymentProcessorResponse object
-        PaymentProcessorResponse processorResponse = objectMapper.readValue(processorResponseJson, PaymentProcessorResponse.class);
+        PaymentProcessorResponse response = paymentProcessorService.sendPaymentToProcessor(transactionId);
 
         // Update payment status based on processor response
-        return paymentProcessorService.paymentStatusUpdate(processorResponse);
+        return paymentProcessorService.paymentStatusUpdate(response);
+    }
+
+    private String initializeTransaction(TransactionRequest request) throws IOException {
+        String transactionId = transactionService.createPaymentProcess(request);
+        request.setTransactionId(transactionId);
+        idempotencyService.createTransactionIdempotencyEntry(transactionId, objectMapper.writeValueAsString(request));
+        audit.logPaymentProcessStarting(transactionId); // LOG
+        return transactionId;
     }
 }
 
