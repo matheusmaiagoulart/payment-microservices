@@ -1,8 +1,9 @@
 package com.matheus.payments.Application.Services;
 
-import com.matheus.payments.Domain.Transaction;
-import com.matheus.payments.Infra.Repository.TransactionRepository;
+import com.matheus.payments.Domain.Models.Transaction;
+import com.matheus.payments.Domain.Repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public class StatementService {
     private final TransactionRepository transactionRepository;
     public StatementService(TransactionRepository transactionRepository) { this.transactionRepository = transactionRepository; }
 
+    @Transactional(readOnly = true)
     public List<Transaction> getAllTransactionsStatements(UUID accountId){
         return transactionRepository.findTransactionsBySenderAccountIdOrReceiverAccountId(accountId, accountId)
                 .orElseThrow(() -> new RuntimeException("No transactions found for accountId: " + accountId));
