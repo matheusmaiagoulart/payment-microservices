@@ -2,9 +2,8 @@ package com.matheus.payments.Infra.Exceptions.Handler;
 
 import com.matheus.payments.Infra.Exceptions.Custom.FailedToSentException;
 import com.matheus.payments.Infra.Exceptions.Custom.TransactionAlreadySentException;
-import com.matheus.payments.Infra.Exceptions.Custom.TransactionFailedException;
-import com.matheus.payments.Infra.Exceptions.Custom.TransactionNotFound;
-import com.matheus.payments.instant.Infra.Exceptions.Custom.*;
+import com.matheus.payments.Domain.Exceptions.TransactionFailedException;
+import com.matheus.payments.Domain.Exceptions.TransactionNotFound;
 import com.matheus.payments.Infra.Exceptions.HandlerMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

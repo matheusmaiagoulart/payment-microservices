@@ -1,7 +1,7 @@
 package com.matheus.payments.Application.Mappers;
 
 import com.matheus.payments.Application.DTOs.TransactionRequest;
-import com.matheus.payments.Domain.Transaction;
+import com.matheus.payments.Domain.Models.Transaction;
 import org.shared.DTOs.TransactionDTO;
 
 public interface TransactionMapper {
