@@ -50,6 +50,20 @@ public class PaymentProcessorAudit {
         log.error("Error to sent a request for Wallet Server", logData.toArray());
     }
 
+    public void logErrorToParseResponseInformations(String transactionId, String response, String errorMessage) {
+        ArrayList<Object> logData = new ArrayList<>();
+
+        logData.addAll(LogBuilder.baseLog(ApplicationData.SERVICE_NAME, CorrelationId.get(), CLASS_NAME, "sendPaymentToProcessor", "Error to parse response informations from Wallet Server"));
+        logData.addAll(LogBuilder.requestLog("POST", WALLET_ENDPOINT));
+        logData.add(kv("target_service", WALLET_SERVICE_NAME));
+        logData.add(kv("event", "payment.request.send.success.response.parse.failed"));
+        logData.add(kv("transactionId", transactionId));
+        logData.add(kv("response", response));
+        logData.add(kv("errorMessage", errorMessage));
+
+        log.error("Error to parse response", logData.toArray());
+    }
+
     public void logSentSuccessfullyWallet(String transactionId) {
         ArrayList<Object> logData = new ArrayList<>();
 
