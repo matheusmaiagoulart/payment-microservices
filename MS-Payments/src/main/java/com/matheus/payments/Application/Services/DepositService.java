@@ -1,6 +1,7 @@
 package com.matheus.payments.Application.Services;
 
 import com.matheus.payments.Application.Audit.DepositServiceAudit;
+import com.matheus.payments.Application.DTOs.DepositRequest;
 import com.matheus.payments.Domain.Events.DepositCreatedEvent;
 import com.matheus.payments.Domain.Exceptions.DepositNotFound;
 import com.matheus.payments.Domain.Models.Deposit;
@@ -27,11 +28,13 @@ public class DepositService {
     }
 
     @Transactional
-    public void createDeposit(Deposit deposit) {
+    public Deposit createDeposit(DepositRequest depositRequest) {
         try {
+            Deposit deposit = new Deposit(depositRequest.getReceiverId(), depositRequest.getAmount());
             audit.logCreateDepositEntry();
             depositRepository.saveDeposit(deposit);
             eventPublisher.publishEvent(new DepositCreatedEvent(deposit));
+            return deposit;
         } catch (DataBaseException e) {
             audit.logErrorCreateDeposit(e.getMessage());
              throw e;

@@ -15,7 +15,7 @@ public class CashDeposit {
         this.depositService = depositService;
     }
 
-     public void execute (DepositRequest depositRequest) {
-        depositService.createDeposit(new Deposit(depositRequest.getReceiverId(), depositRequest.getAmount()));
+     public Deposit execute (DepositRequest depositRequest) {
+        return depositService.createDeposit(depositRequest);
      }
 }
