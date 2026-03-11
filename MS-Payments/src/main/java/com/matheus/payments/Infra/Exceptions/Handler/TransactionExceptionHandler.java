@@ -22,8 +22,8 @@ public class TransactionExceptionHandler {
 
     @ExceptionHandler(FailedToSentException.class)
     public ResponseEntity<HandlerMessage> FailedToSentException(FailedToSentException failedToSentException){
-        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.INTERNAL_SERVER_ERROR, failedToSentException.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(handlerMessage);
+        HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.BAD_GATEWAY, failedToSentException.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(handlerMessage);
     }
 
     @ExceptionHandler(TransactionFailedException.class)
