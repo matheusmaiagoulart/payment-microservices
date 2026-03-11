@@ -12,9 +12,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DepositRequest {
 
-    @NotNull(message = "Sender Account ID cannot be null")
-    public UUID senderId;
-
     @NotNull(message = "Receiver Account ID cannot be null")
     public UUID receiverId;
 

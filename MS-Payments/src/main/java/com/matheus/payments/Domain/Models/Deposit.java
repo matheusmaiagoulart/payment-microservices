@@ -18,7 +18,6 @@ public class Deposit {
 
     @Id
     private UUID depositId;
-    private UUID senderId;
     private UUID receiverId;
     private BigDecimal amount;
 
@@ -26,16 +25,15 @@ public class Deposit {
     private DepositStatus status;
 
     private LocalDateTime payedAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime confirmedAt;
 
-    public Deposit(UUID senderId, UUID receiverId, BigDecimal amount) {
+    public Deposit(UUID receiverId, BigDecimal amount) {
         this.depositId = UUID.randomUUID();
-        this.senderId = senderId;
         this.receiverId = receiverId;
         this.amount = normalizeAmount(amount);
         this.status = DepositStatus.PENDING;
         this.payedAt = LocalDateTime.now();
-        this.updatedAt = null;
+        this.confirmedAt = null;
     }
 
     public enum DepositStatus {
@@ -54,12 +52,12 @@ public class Deposit {
 
     public void markAsConfirmed() {
         this.status = DepositStatus.CONFIRMED;
-        this.updatedAt = LocalDateTime.now();
+        this.confirmedAt = LocalDateTime.now();
     }
 
     public void markAsFailed() {
         this.status = DepositStatus.FAILED;
-        this.updatedAt = LocalDateTime.now();
+        this.confirmedAt = LocalDateTime.now();
     }
 
     public void markAsSent() {

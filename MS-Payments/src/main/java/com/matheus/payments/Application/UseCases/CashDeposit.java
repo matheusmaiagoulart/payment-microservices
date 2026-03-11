@@ -3,7 +3,6 @@ package com.matheus.payments.Application.UseCases;
 import com.matheus.payments.Application.DTOs.DepositRequest;
 import com.matheus.payments.Application.Services.DepositService;
 import com.matheus.payments.Domain.Models.Deposit;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 
@@ -17,6 +16,6 @@ public class CashDeposit {
     }
 
      public void execute (DepositRequest depositRequest) {
-        depositService.createDeposit(new Deposit(depositRequest.getSenderId(), depositRequest.getReceiverId(), depositRequest.getAmount()));
+        depositService.createDeposit(new Deposit(depositRequest.getReceiverId(), depositRequest.getAmount()));
      }
 }

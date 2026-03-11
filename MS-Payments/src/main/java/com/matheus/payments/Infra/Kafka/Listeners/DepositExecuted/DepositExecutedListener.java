@@ -1,5 +1,7 @@
 package com.matheus.payments.Infra.Kafka.Listeners.DepositExecuted;
 
+import ch.qos.logback.core.util.FixedDelay;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.CorrelationId;
 import com.matheus.payments.Application.Services.DepositService;
@@ -8,9 +10,17 @@ import com.matheus.payments.Utils.ApplicationData;
 import com.matheus.payments.Utils.KafkaTopics;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.SameIntervalTopicReuseStrategy;
+import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.scheduling.config.FixedDelayTask;
 import org.springframework.stereotype.Component;
+
+import java.sql.SQLException;
 
 @Slf4j
 @Component
@@ -26,13 +36,14 @@ public class DepositExecutedListener {
         this.depositService = depositService;
     }
 
+
     @KafkaListener(topics = KafkaTopics.DEPOSIT_EXECUTED_TOPIC, groupId = ApplicationData.APPLICATION_CONSUMER_GROUP)
-    public void depositExecutedListener(ConsumerRecord<String, String> message, Acknowledgment ack) {
-        getCorrelation(message);
+    public void depositExecutedListener(ConsumerRecord<String, String> message, Acknowledgment ack) throws SQLException {
         audit.logMessageConsumedFromKafka();
         String depositId = null;
-
         try {
+            getCorrelation(message);
+
             DepositExecuted depositExecuted = parseMessage(message.value());
             depositId = depositExecuted.getDepositId().toString();
 
@@ -41,17 +52,19 @@ public class DepositExecutedListener {
             depositService.setDepositStatusExecuted(depositId);
 
             audit.logDepositUpdatedSuccessfully(depositId);
+
+            ack.acknowledge();
         }
-        catch (Exception e) {
+        catch (JsonProcessingException e) {
             audit.logDepositUpdatedFailed(depositId, e.getMessage());
         }
         finally {
-            ack.acknowledge();
             CorrelationId.clear();
+            ack.acknowledge();
         }
     }
 
-    private DepositExecuted parseMessage(String message) throws Exception {
+    private DepositExecuted parseMessage(String message) throws JsonProcessingException {
         return objectMapper.readValue(message, DepositExecuted.class);
     }
 
