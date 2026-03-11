@@ -2,9 +2,9 @@ package com.matheus.payments.Infra.Http;
 
 
 import com.matheus.payments.Application.Audit.CorrelationId;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLContext;
@@ -36,7 +36,6 @@ public class WalletService {
         try (InputStream trustStream = new ClassPathResource("Certifications/truststore.jks").getInputStream()) {
             trustStore.load(trustStream, "changeit".toCharArray());
         }
-
         // Cria o SSLContext que confia nesse truststore
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(trustStore);
@@ -51,8 +50,10 @@ public class WalletService {
                 .build();
     }
 
-    @Retryable(retryFor = {IOException.class, InterruptedException.class}, maxAttempts = 4, backoff = @Backoff (delay = 1000, multiplier = 1.5))
+    @Retry(name = "walletServiceRetry")
+    @CircuitBreaker(name = "defaultCircuitBreaker")
     public HttpResponse<String> instantPaymentRequest(String jsonPayload) throws IOException, InterruptedException, TimeoutException {
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://localhost:8081/wallets/instant-payment"))
                 .header("Content-Type", "application/json")
