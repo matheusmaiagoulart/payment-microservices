@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.Services;
 import com.matheus.payments.wallet.Application.Audit.LedgerAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgerEntry;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
 import com.matheus.payments.wallet.Domain.Repositories.WalletLedgerRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,10 +27,10 @@ public class LedgerService {
      * This method register ledger entries for debit and credit operations, to audit transactions and wallet operations.
      *
      * @param pixTransfer Data transfer context
-     * @throws FailedToSaveLedgeEntry
+     * @throws FailedToSaveLedgerEntry
      */
 
-    public void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
+    public void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgerEntry {
         String transactionId = pixTransfer.getTransactionId().toString();
         UUID senderWalletId = pixTransfer.getSenderPixKey().getAccountId();
         UUID receiverWalletId = pixTransfer.getReceiverPixKey().getAccountId();
@@ -44,7 +44,7 @@ public class LedgerService {
             walletLedgerRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, pixTransfer.getSenderPixKey().getKeyValue());
-            throw new FailedToSaveLedgeEntry(transactionId);
+            throw new FailedToSaveLedgerEntry(transactionId);
         }
     }
 
@@ -59,7 +59,7 @@ public class LedgerService {
             walletLedgerRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, receiverWalletId.toString());
-            throw new FailedToSaveLedgeEntry(transactionId);
+            throw new FailedToSaveLedgerEntry(transactionId);
         }
     }
 }

@@ -11,7 +11,7 @@ import com.matheus.payments.wallet.Domain.Exceptions.InvalidAmountException;
 import com.matheus.payments.wallet.Domain.Exceptions.WalletNotFoundException;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgerEntry;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixKeyFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixTransferFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.TransactionDTOFixture;
@@ -355,12 +355,12 @@ public class TransferExecutionTests {
             when(walletService.getWalletById(request.getReceiverAccountId()))
                     .thenReturn(Optional.of(receiverWallet));
 
-            doThrow(new FailedToSaveLedgeEntry(request.getTransactionId()))
+            doThrow(new FailedToSaveLedgerEntry(request.getTransactionId()))
                     .when(ledgerService).registryLedgeEntries(any(PixTransfer.class));
 
             // Act & Assert
-            FailedToSaveLedgeEntry exception = assertThrows(
-                    FailedToSaveLedgeEntry.class,
+            FailedToSaveLedgerEntry exception = assertThrows(
+                    FailedToSaveLedgerEntry.class,
                     () -> transferExecution.transferExecutionWithRetry(pixTransfer)
             );
 

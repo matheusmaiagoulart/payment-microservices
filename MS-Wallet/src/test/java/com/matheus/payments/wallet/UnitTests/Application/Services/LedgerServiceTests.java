@@ -4,7 +4,7 @@ import com.matheus.payments.wallet.Application.Audit.LedgerAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Application.Services.LedgerService;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgerEntry;
 import com.matheus.payments.wallet.Domain.Repositories.WalletLedgerRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixKeyFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixTransferFixture;
@@ -100,13 +100,13 @@ public class LedgerServiceTests {
                     .thenThrow(new DataIntegrityViolationException("Database constraint violation"));
 
             // Act & Assert
-            FailedToSaveLedgeEntry exception = assertThrows(
-                    FailedToSaveLedgeEntry.class,
+            FailedToSaveLedgerEntry exception = assertThrows(
+                    FailedToSaveLedgerEntry.class,
                     () -> ledgerService.registryLedgeEntries(pixTransfer)
             );
 
             assertNotNull(exception);
-            assertEquals(FailedToSaveLedgeEntry.class, exception.getClass());
+            assertEquals(FailedToSaveLedgerEntry.class, exception.getClass());
             verify(audit, times(1)).logFailedCreateLedgerEntries(
                     pixTransfer.getTransactionId().toString(),
                     pixTransfer.getSenderPixKey().getKeyValue()
@@ -123,7 +123,7 @@ public class LedgerServiceTests {
                     .when(walletLedgerRepository).saveAndFlush(any(WalletLedger.class));
 
             // Act & Assert
-            assertThrows(FailedToSaveLedgeEntry.class, () -> ledgerService.registryLedgeEntries(pixTransfer));
+            assertThrows(FailedToSaveLedgerEntry.class, () -> ledgerService.registryLedgeEntries(pixTransfer));
 
             verify(audit, times(1)).logFailedCreateLedgerEntries(anyString(), anyString());
         }
