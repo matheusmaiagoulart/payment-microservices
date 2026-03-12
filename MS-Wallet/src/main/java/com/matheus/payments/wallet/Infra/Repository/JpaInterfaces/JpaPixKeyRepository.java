@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Infra.Repository;
+package com.matheus.payments.wallet.Infra.Repository.JpaInterfaces;
 
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,10 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface PixKeyRepository extends JpaRepository<PixKey, UUID> {
+public interface JpaPixKeyRepository extends JpaRepository<PixKey, UUID> {
 
     @Query("SELECT wk FROM PixKey wk WHERE wk.keyValue = :keyValue")
     Optional<PixKey> findAccountIdByKey(String keyValue);
 
     Boolean existsWalletKeysByKeyValue(String keyValue);
 }
+

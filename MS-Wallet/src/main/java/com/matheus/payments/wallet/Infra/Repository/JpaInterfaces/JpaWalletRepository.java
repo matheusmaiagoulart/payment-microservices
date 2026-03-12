@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Infra.Repository;
+package com.matheus.payments.wallet.Infra.Repository.JpaInterfaces;
 
 import com.matheus.payments.wallet.Domain.Models.Wallet;
 import jakarta.persistence.LockModeType;
@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface WalletRepository extends JpaRepository<Wallet, UUID> {
+public interface JpaWalletRepository extends JpaRepository<Wallet, UUID> {
 
     @Lock(LockModeType.OPTIMISTIC)
     @Query("SELECT w FROM Wallet w WHERE w.accountId = :userId and w.isActive = true")
@@ -19,3 +19,4 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     Boolean existsBySocialId(String keyValue);
 }
+
