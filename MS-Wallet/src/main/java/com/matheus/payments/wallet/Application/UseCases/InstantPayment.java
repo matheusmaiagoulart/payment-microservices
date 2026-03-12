@@ -38,9 +38,10 @@ public class InstantPayment {
     public InstantPaymentResponse transferProcess(TransactionDTO request) {
 
         audit.logStartingTransferProcess(request.getTransactionId()); // LOG
-        PixTransfer pixTransfer = createPixTransfer(request); // Get all necessary data for the transfer
+        PixTransfer pixTransfer = new PixTransfer(request.getTransactionId(), null, null, request.getAmount());
 
         try {
+            pixTransfer = createPixTransfer(request);
             saveProcessedTransaction(pixTransfer.getTransactionId());
 
             sameUserValidation(pixTransfer.getSenderPixKey().getAccountId(), pixTransfer.getReceiverPixKey().getAccountId());
