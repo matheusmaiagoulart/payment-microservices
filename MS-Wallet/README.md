@@ -28,7 +28,7 @@
 
 ## 📋 Sobre o Projeto
 
-O **MS-Wallet** é o microserviço central de um sistema de pagamentos distribuído, responsável pelo ciclo de vida completo das carteiras digitais. Ele atua como o **núcleo financeiro** do ecossistema, garantindo consistência transacional, auditoria e integração fluida com outros serviços via eventos.
+O **MS-Wallet** é o microserviço central de um sistema de pagamentos distribuído, responsável pelo ciclo de vida completo das carteiras digitais. Ele atua como o **núcleo financeiro** do ecossistema, garantindo consistência transacional, auditoria e integração fluida com outros serviços via eventos assíncronos.
 
 ### Responsabilidades do Serviço
 
