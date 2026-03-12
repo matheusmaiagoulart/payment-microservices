@@ -1,5 +1,6 @@
 package com.matheus.payments.wallet.UnitTests.Application.Services;
 
+import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
 import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
@@ -45,6 +46,7 @@ public class OutboxServiceTests {
             String payload = "{\"userId\": \"" + userId + "\", \"action\": \"CREATE_WALLET\"}";
             String eventType = "CREATE_WALLET";
             String topic = KafkaTopics.WALLET_CREATED_EVENT_TOPIC;
+            CorrelationId.set(UUID.randomUUID().toString());
 
             when(outboxRepository.save(any(Outbox.class))).thenReturn(any(Outbox.class));
 
@@ -82,33 +84,5 @@ public class OutboxServiceTests {
             assertEquals(outbox.getEventType(), capturedOutbox.getEventType());
             assertEquals(outbox.getUserId(), capturedOutbox.getUserId());
         }
-
-//        @Test
-//        @DisplayName("Should not mark Outbox as sent when Kafka send fails")
-//        public void shouldNotMarkOutboxAsSent_WhenKafkaSendFails() throws ExecutionException, InterruptedException {
-//            ArgumentCaptor<Outbox> captor = ArgumentCaptor.forClass(Outbox.class);
-//
-//            // Arrange
-//            Outbox outbox = OutboxFixture.createOutbox();
-//
-//            when(kafkaTemplate.send(outbox.getTopic(), outbox.getPayload()))
-//                    .thenThrow(new ExecutionException());
-//            when(outboxRepository.save(any(Outbox.class))).thenReturn(outbox);
-//
-//            // Act
-//            outboxService.sendOutboxEvent(outbox);
-//
-//            // Assert
-//            assertThrows(TimeoutException.class,
-//                    () -> outboxService.sendOutboxEvent(outbox));
-//            verify(kafkaTemplate).send(outbox.getTopic(), outbox.getPayload());
-//            verify(outboxRepository).save(captor.capture());
-//            Outbox capturedOutbox = captor.getValue();
-//
-//            assertFalse(capturedOutbox.isSent());
-//            assertTrue(capturedOutbox.isFailed());
-//        }
-
-
     }
 }
