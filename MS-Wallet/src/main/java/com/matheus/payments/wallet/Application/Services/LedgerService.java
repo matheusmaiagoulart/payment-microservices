@@ -50,7 +50,6 @@ public class LedgerService {
 
     public void registryDepositEntryLedge(DepositCreated deposit) {
         String transactionId = deposit.getDepositId().toString();
-        UUID senderWalletId = deposit.getSenderId();
         UUID receiverWalletId = deposit.getReceiverId();
         BigDecimal amount = deposit.getAmount();
 
@@ -59,7 +58,7 @@ public class LedgerService {
         try {
             walletLedgeRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
-            audit.logFailedCreateLedgerEntries(transactionId, senderWalletId.toString());
+            audit.logFailedCreateLedgerEntries(transactionId, receiverWalletId.toString());
             throw new FailedToSaveLedgeEntry(transactionId);
         }
     }
