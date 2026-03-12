@@ -50,7 +50,7 @@ public class InstantPayment {
 
             return successTransfer(pixTransfer);
         }
-        catch (FailedToSaveLedgeEntry e) {
+        catch (FailedToSaveLedgerEntry e) {
             return failedTransfer(pixTransfer, "Failed to save ledger entries: " + e.getMessage());
         }
         catch (OptimisticLockingFailureException e) {

@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.Services;
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
 import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Domain.Exceptions.DomainException;
-import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
+import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgerEntry;
 import com.matheus.payments.wallet.Domain.Exceptions.WalletNotFoundException;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
@@ -34,12 +34,12 @@ public class TransferExecution {
      *
      * @param pixTransfer Data transfer context
      * @throws DomainException                   If business validation fails (insufficient balance, wallet not found, etc.)
-     * @throws FailedToSaveLedgeEntry            If ledger entry save fails
+     * @throws FailedToSaveLedgerEntry            If ledger entry save fails
      * @throws OptimisticLockingFailureException If concurrent update conflict occurs (will be retried)
      */
     @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToExecuteTransfer")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void transferExecutionWithRetry(PixTransfer pixTransfer) throws DomainException, FailedToSaveLedgeEntry {
+    public void transferExecutionWithRetry(PixTransfer pixTransfer) throws DomainException, FailedToSaveLedgerEntry {
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
         Wallet senderWallet = walletService.getWalletById(pixTransfer.getSenderPixKey().getAccountId())
@@ -57,10 +57,10 @@ public class TransferExecution {
         walletService.saveWallet(receiverWallet);
     }
 
-    private void registerLedgerEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
+    private void registerLedgerEntries(PixTransfer pixTransfer) throws FailedToSaveLedgerEntry {
         try {
             ledgerService.registryLedgeEntries(pixTransfer);
-        } catch (FailedToSaveLedgeEntry e) {
+        } catch (FailedToSaveLedgerEntry e) {
             audit.logFailedGeneric(pixTransfer.getTransactionId().toString(), e.getMessage());
             throw e;
         }
@@ -79,10 +79,10 @@ public class TransferExecution {
         walletService.saveWallet(receiverWallet);
     }
 
-    private void registerDepositLedgerEntries(DepositCreated data) throws FailedToSaveLedgeEntry {
+    private void registerDepositLedgerEntries(DepositCreated data) throws FailedToSaveLedgerEntry {
         try {
             ledgerService.registryDepositEntryLedge(data);
-        } catch (FailedToSaveLedgeEntry e) {
+        } catch (FailedToSaveLedgerEntry e) {
             audit.logFailedGeneric(data.getDepositId().toString(), e.getMessage());
             throw e;
         }

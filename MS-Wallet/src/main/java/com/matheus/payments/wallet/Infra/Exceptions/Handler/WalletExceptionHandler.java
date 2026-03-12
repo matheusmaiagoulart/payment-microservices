@@ -40,8 +40,8 @@ public class WalletExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(handlerMessage);
     }
 
-    @ExceptionHandler(FailedToSaveLedgeEntry.class)
-    public ResponseEntity<HandlerMessage> FailedToSave(FailedToSaveLedgeEntry failedToSave){
+    @ExceptionHandler(FailedToSaveLedgerEntry.class)
+    public ResponseEntity<HandlerMessage> FailedToSave(FailedToSaveLedgerEntry failedToSave){
         HandlerMessage handlerMessage = new HandlerMessage(HttpStatus.CONFLICT , "An error occurred while creating ledger entries: " + failedToSave.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(handlerMessage);
     }
