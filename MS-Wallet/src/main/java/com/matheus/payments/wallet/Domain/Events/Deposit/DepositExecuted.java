@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Application.Events.Deposit;
+package com.matheus.payments.wallet.Domain.Events.Deposit;
 
 import lombok.Getter;
 
@@ -7,21 +7,19 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
-public class DepositFailed {
+public class DepositExecuted {
 
     private UUID depositId;
     private UUID receiverId;
     private BigDecimal amount;
     private boolean successful;
-    private String failureReason;
     private LocalDateTime timestamp;
 
-    public DepositFailed(UUID depositId, boolean successful, UUID userId, BigDecimal amount, String failureReason) {
+    public DepositExecuted(UUID depositId, UUID userId, BigDecimal amount) {
         this.depositId = depositId;
         this.receiverId = userId;
         this.amount = amount;
-        this.successful = successful;
-        this.failureReason = failureReason;
+        this.successful = true;
         this.timestamp = LocalDateTime.now();
     }
 }

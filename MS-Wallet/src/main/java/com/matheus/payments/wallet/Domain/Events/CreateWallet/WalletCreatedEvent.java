@@ -1,4 +1,4 @@
-package com.matheus.payments.wallet.Application.Events.CreateWallet;
+package com.matheus.payments.wallet.Domain.Events.CreateWallet;
 
 import lombok.Getter;
 
