@@ -1,23 +1,17 @@
 package com.matheus.payments.Infra.Kafka.Listeners.DepositExecuted;
 
-import ch.qos.logback.core.util.FixedDelay;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.CorrelationId;
 import com.matheus.payments.Application.Services.DepositService;
+import com.matheus.payments.Domain.Models.Deposit;
 import com.matheus.payments.Infra.Audit.DepositExecutedListenerAudit;
 import com.matheus.payments.Utils.ApplicationData;
 import com.matheus.payments.Utils.KafkaTopics;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.kafka.retrytopic.SameIntervalTopicReuseStrategy;
-import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.scheduling.config.FixedDelayTask;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
@@ -49,7 +43,7 @@ public class DepositExecutedListener {
 
             audit.logStartDepositUpdate(depositId);
 
-            depositService.setDepositStatusExecuted(depositId);
+            depositService.updateDepositStatus(depositId, Deposit.DepositStatus.CONFIRMED);
 
             audit.logDepositUpdatedSuccessfully(depositId);
 

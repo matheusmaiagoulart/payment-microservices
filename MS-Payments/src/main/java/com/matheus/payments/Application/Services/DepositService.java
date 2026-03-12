@@ -37,41 +37,20 @@ public class DepositService {
             return deposit;
         } catch (DataBaseException e) {
             audit.logErrorCreateDeposit(e.getMessage());
-             throw e;
+            throw e;
         }
     }
 
-    public void updateDeposit(Deposit deposit) {
+    private void updateDeposit(Deposit deposit) {
         depositRepository.saveDeposit(deposit);
     }
 
     @Retry(name = "databaseRetry")
     @Transactional
-    public void setDepositStatusSent(String depositId) {
+    public void updateDepositStatus(String depositId, Deposit.DepositStatus status) {
         Deposit deposit = depositRepository.getDepositById(UUID.fromString(depositId))
                 .orElseThrow(() -> new DepositNotFound(depositId));
-
-        deposit.markAsSent();
-        updateDeposit(deposit);
-    }
-
-    @Retry(name = "databaseRetry")
-    @Transactional
-    public void setDepositStatusExecuted(String depositId) {
-        Deposit deposit = depositRepository.getDepositById(UUID.fromString(depositId))
-                .orElseThrow(() -> new DepositNotFound(depositId));
-
-        deposit.markAsConfirmed();
-        updateDeposit(deposit);
-    }
-
-    @Retry(name = "databaseRetry")
-    @Transactional
-    public void setDepositStatusFailed(String depositId) {
-        Deposit deposit = depositRepository.getDepositById(UUID.fromString(depositId))
-                .orElseThrow(() -> new DepositNotFound(depositId));
-
-        deposit.markAsFailed();
+        deposit.updateStatus(status);
         updateDeposit(deposit);
     }
 

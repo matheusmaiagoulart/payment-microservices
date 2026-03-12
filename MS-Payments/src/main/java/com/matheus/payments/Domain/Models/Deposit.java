@@ -50,17 +50,11 @@ public class Deposit {
         return amount.setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
-    public void markAsConfirmed() {
-        this.status = DepositStatus.CONFIRMED;
+    public void updateStatus(DepositStatus status) {
+        if (status.equals(DepositStatus.SENT)) {
+            this.status = DepositStatus.SENT;
+        }
+        this.status = status;
         this.confirmedAt = LocalDateTime.now();
-    }
-
-    public void markAsFailed() {
-        this.status = DepositStatus.FAILED;
-        this.confirmedAt = LocalDateTime.now();
-    }
-
-    public void markAsSent() {
-        this.status = DepositStatus.SENT;
     }
 }

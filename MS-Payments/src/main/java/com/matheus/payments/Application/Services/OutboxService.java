@@ -3,6 +3,7 @@ package com.matheus.payments.Application.Services;
 import com.matheus.payments.Application.Audit.CorrelationId;
 import com.matheus.payments.Application.Audit.OutboxServiceAudit;
 import com.matheus.payments.Domain.Exceptions.TransactionNotFound;
+import com.matheus.payments.Domain.Models.Deposit;
 import com.matheus.payments.Domain.Models.TransactionOutbox;
 import com.matheus.payments.Domain.Repositories.OutboxRepository;
 import com.matheus.payments.Infra.Exceptions.Custom.DataBaseException;
@@ -81,7 +82,7 @@ public class OutboxService {
                 .build();
         kafkaTemplate.send(message).get();
         setOutboxSent(outbox);
-        depositService.setDepositStatusSent(outbox.getTransactionId());
+        depositService.updateDepositStatus(outbox.getTransactionId(), Deposit.DepositStatus.SENT);
     }
 
     private void setOutboxSent(TransactionOutbox outbox) {

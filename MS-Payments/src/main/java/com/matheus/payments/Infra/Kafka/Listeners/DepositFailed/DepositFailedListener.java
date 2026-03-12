@@ -1,10 +1,10 @@
 package com.matheus.payments.Infra.Kafka.Listeners.DepositFailed;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.Application.Audit.CorrelationId;
 import com.matheus.payments.Application.Services.DepositService;
+import com.matheus.payments.Domain.Models.Deposit;
 import com.matheus.payments.Infra.Audit.DepositFailedListenerAudit;
 import com.matheus.payments.Utils.ApplicationData;
 import com.matheus.payments.Utils.KafkaTopics;
@@ -39,7 +39,7 @@ public class DepositFailedListener {
             DepositFailed depositExecuted = parseMessage(message.value());
             depositId = depositExecuted.getDepositId().toString();
             audit.logStartDepositUpdate(depositId);
-            depositService.setDepositStatusFailed(depositExecuted.getDepositId().toString());
+            depositService.updateDepositStatus(depositExecuted.getDepositId().toString(), Deposit.DepositStatus.FAILED);
             audit.logDepositUpdatedSuccessfully(depositId);
         }
         catch (Exception e) {
