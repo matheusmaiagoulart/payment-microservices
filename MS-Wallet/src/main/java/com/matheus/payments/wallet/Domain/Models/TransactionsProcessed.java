@@ -6,6 +6,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -24,7 +25,10 @@ public class TransactionsProcessed {
     @Id
     private UUID transactionId;
 
+    private LocalDateTime timestamp;
+
     public TransactionsProcessed(UUID transactionId) {
         this.transactionId = transactionId;
+        this.timestamp = LocalDateTime.now();
     }
 }
