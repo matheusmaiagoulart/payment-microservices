@@ -15,7 +15,6 @@ import java.util.UUID;
 public class DepositCreated {
 
     private UUID depositId;
-    private UUID senderId;
     private UUID receiverId;
     private BigDecimal amount;
 }
