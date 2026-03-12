@@ -124,13 +124,12 @@ public class InstantPaymentTests {
             when(pixKeyService.getWalletIdByKey(request.getSenderKey())).thenReturn(Optional.empty());
 
             // Assert - Response
-            WalletNotFoundException exception = assertThrows(WalletNotFoundException.class, () -> {
-                instantPayment.transferProcess(request);
-            });
+            InstantPaymentResponse response = instantPayment.transferProcess(request);
 
-            assertNotNull(exception);
-            assertEquals(WalletNotFoundException.SENDER_CODE, exception.getErrorCode());
-            assertEquals(WalletNotFoundException.class, exception.getClass());
+            assertNotNull(response);
+            assertFalse(response.isSucessful());
+            assertFalse(response.isAlreadyProcessed());
+            assertEquals(WalletNotFoundException.SENDER_MESSAGE, response.getFailedMessage());
 
             // Assert - Verify Operations were called
             verify(transactionsProcessedRepository, never()).saveAndFlush(any());
@@ -149,13 +148,12 @@ public class InstantPaymentTests {
             when(pixKeyService.getWalletIdByKey(request.getReceiverKey())).thenReturn(Optional.empty());
 
             // Assert - Response
-            WalletNotFoundException exception = assertThrows(WalletNotFoundException.class, () -> {
-                instantPayment.transferProcess(request);
-            });
+            InstantPaymentResponse response = instantPayment.transferProcess(request);
 
-            assertNotNull(exception);
-            assertEquals(WalletNotFoundException.RECEIVER_CODE, exception.getErrorCode());
-            assertEquals(WalletNotFoundException.class, exception.getClass());
+            assertNotNull(response);
+            assertFalse(response.isSucessful());
+            assertFalse(response.isAlreadyProcessed());
+            assertEquals(WalletNotFoundException.RECEIVER_MESSAGE, response.getFailedMessage());
 
             // Assert - Verify Operations were called
             verify(transactionsProcessedRepository, never()).saveAndFlush(any());
