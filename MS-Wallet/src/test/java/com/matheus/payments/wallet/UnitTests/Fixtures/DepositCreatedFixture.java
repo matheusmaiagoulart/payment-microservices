@@ -11,7 +11,6 @@ public class DepositCreatedFixture {
         return new DepositCreated(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                UUID.randomUUID(),
                 amount
         );
     }
@@ -19,7 +18,6 @@ public class DepositCreatedFixture {
     public static DepositCreated createDepositCreated(UUID depositId, UUID receiverId, BigDecimal amount) {
         return new DepositCreated(
                 depositId,
-                UUID.randomUUID(),
                 receiverId,
                 amount
         );
