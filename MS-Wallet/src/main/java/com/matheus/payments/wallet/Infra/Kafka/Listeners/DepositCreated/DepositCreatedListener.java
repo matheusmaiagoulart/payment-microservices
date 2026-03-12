@@ -31,14 +31,11 @@ public class DepositCreatedListener {
     public void depositCreatedListener(ConsumerRecord<String, String> message, Acknowledgment ack) throws JsonProcessingException {
         getCorrelation(message);
         DepositCreated event = null;
-
         audit.logEventReceived();
 
         try {
             event = parseMessage(message.value());
             depositUseCase.executeDeposit(event);
-            ack.acknowledge();
-
         } catch (JsonProcessingException e) {
             throw e;
         } finally {
