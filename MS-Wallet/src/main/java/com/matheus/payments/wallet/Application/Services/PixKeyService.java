@@ -1,8 +1,7 @@
 package com.matheus.payments.wallet.Application.Services;
 
 import com.matheus.payments.wallet.Domain.Models.PixKey;
-import com.matheus.payments.wallet.Domain.Models.Wallet;
-import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
+import com.matheus.payments.wallet.Domain.Repositories.PixKeyRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

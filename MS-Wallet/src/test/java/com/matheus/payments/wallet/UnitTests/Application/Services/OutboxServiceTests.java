@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.UnitTests.Application.Services;
 import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
-import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
+import com.matheus.payments.wallet.Domain.Repositories.OutboxRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.OutboxFixture;
 import com.matheus.payments.wallet.utils.KafkaTopics;
 import org.junit.jupiter.api.DisplayName;

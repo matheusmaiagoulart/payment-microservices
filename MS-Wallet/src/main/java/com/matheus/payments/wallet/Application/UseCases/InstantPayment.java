@@ -9,7 +9,7 @@ import com.matheus.payments.wallet.Domain.Exceptions.*;
 import com.matheus.payments.wallet.Domain.Models.TransactionsProcessed;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.*;
-import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
+import com.matheus.payments.wallet.Domain.Repositories.TransactionProcessedRepository;
 import org.shared.DTOs.TransactionDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;

@@ -5,7 +5,7 @@ import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Application.Services.LedgerService;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
-import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
+import com.matheus.payments.wallet.Domain.Repositories.WalletLedgerRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixKeyFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixTransferFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.TransactionDTOFixture;
@@ -34,7 +34,7 @@ public class LedgerServiceTests {
     private LedgerAudit audit;
 
     @Mock
-    private WalletLedgeRepository walletLedgeRepository;
+    private WalletLedgerRepository walletLedgerRepository;
 
     @InjectMocks
     private LedgerService ledgerService;
@@ -57,14 +57,14 @@ public class LedgerServiceTests {
         public void shouldRegisterLedgerEntriesSuccessfully() {
             // Arrange
             PixTransfer pixTransfer = createValidPixTransfer();
-            when(walletLedgeRepository.saveAndFlush(any(WalletLedger.class))).thenReturn(new WalletLedger());
+            when(walletLedgerRepository.saveAndFlush(any(WalletLedger.class))).thenReturn(new WalletLedger());
 
             // Act
             assertDoesNotThrow(() -> ledgerService.registryLedgeEntries(pixTransfer));
 
             // Assert
             ArgumentCaptor<WalletLedger> ledgerCaptor = ArgumentCaptor.forClass(WalletLedger.class);
-            verify(walletLedgeRepository, times(2)).saveAndFlush(ledgerCaptor.capture());
+            verify(walletLedgerRepository, times(2)).saveAndFlush(ledgerCaptor.capture());
 
             var capturedLedgers = ledgerCaptor.getAllValues();
             assertEquals(2, capturedLedgers.size());
@@ -96,7 +96,7 @@ public class LedgerServiceTests {
         public void shouldThrowFailedToSaveLedgeEntry_WhenDataIntegrityViolationOccurs() {
             // Arrange
             PixTransfer pixTransfer = createValidPixTransfer();
-            when(walletLedgeRepository.saveAndFlush(any(WalletLedger.class)))
+            when(walletLedgerRepository.saveAndFlush(any(WalletLedger.class)))
                     .thenThrow(new DataIntegrityViolationException("Database constraint violation"));
 
             // Act & Assert
@@ -111,7 +111,7 @@ public class LedgerServiceTests {
                     pixTransfer.getTransactionId().toString(),
                     pixTransfer.getSenderPixKey().getKeyValue()
             );
-            verify(walletLedgeRepository, times(1)).saveAndFlush(any(WalletLedger.class));
+            verify(walletLedgerRepository, times(1)).saveAndFlush(any(WalletLedger.class));
         }
 
         @Test
@@ -120,7 +120,7 @@ public class LedgerServiceTests {
             // Arrange
             PixTransfer pixTransfer = createValidPixTransfer();
             doThrow(new DataIntegrityViolationException("Duplicate entry"))
-                    .when(walletLedgeRepository).saveAndFlush(any(WalletLedger.class));
+                    .when(walletLedgerRepository).saveAndFlush(any(WalletLedger.class));
 
             // Act & Assert
             assertThrows(FailedToSaveLedgeEntry.class, () -> ledgerService.registryLedgeEntries(pixTransfer));

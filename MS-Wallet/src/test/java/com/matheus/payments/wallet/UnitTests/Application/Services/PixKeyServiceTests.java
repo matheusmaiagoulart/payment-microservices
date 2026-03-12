@@ -2,7 +2,7 @@ package com.matheus.payments.wallet.UnitTests.Application.Services;
 
 import com.matheus.payments.wallet.Application.Services.PixKeyService;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
-import com.matheus.payments.wallet.Infra.Repository.PixKeyRepository;
+import com.matheus.payments.wallet.Domain.Repositories.PixKeyRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixKeyFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

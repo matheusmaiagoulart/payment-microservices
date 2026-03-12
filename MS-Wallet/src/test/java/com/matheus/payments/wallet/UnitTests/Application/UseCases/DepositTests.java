@@ -6,7 +6,7 @@ import com.matheus.payments.wallet.Application.Services.TransferExecution;
 import com.matheus.payments.wallet.Application.UseCases.Deposit;
 import com.matheus.payments.wallet.Domain.Models.DepositsProcessed;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
-import com.matheus.payments.wallet.Infra.Repository.DepositsProcessedRepository;
+import com.matheus.payments.wallet.Domain.Repositories.DepositsProcessedRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.DepositCreatedFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

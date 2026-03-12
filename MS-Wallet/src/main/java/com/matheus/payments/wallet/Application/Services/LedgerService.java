@@ -5,7 +5,7 @@ import com.matheus.payments.wallet.Application.DTOs.Context.PixTransfer;
 import com.matheus.payments.wallet.Domain.Models.WalletLedger;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.FailedToSaveLedgeEntry;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
-import com.matheus.payments.wallet.Infra.Repository.WalletLedgeRepository;
+import com.matheus.payments.wallet.Domain.Repositories.WalletLedgerRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +16,11 @@ import java.util.UUID;
 public class LedgerService {
 
     private final LedgerAudit audit;
-    private final WalletLedgeRepository walletLedgeRepository;
+    private final WalletLedgerRepository walletLedgerRepository;
 
-    public LedgerService(LedgerAudit audit, WalletLedgeRepository walletLedgeRepository) {
+    public LedgerService(LedgerAudit audit, WalletLedgerRepository walletLedgerRepository) {
         this.audit = audit;
-        this.walletLedgeRepository = walletLedgeRepository;
+        this.walletLedgerRepository = walletLedgerRepository;
     }
 
     /**
@@ -40,8 +40,8 @@ public class LedgerService {
 
         WalletLedger entryCredit = new WalletLedger().createCreditEntry(transactionId, receiverWalletId, senderWalletId, amount);
         try {
-            walletLedgeRepository.saveAndFlush(entryDebit);
-            walletLedgeRepository.saveAndFlush(entryCredit);
+            walletLedgerRepository.saveAndFlush(entryDebit);
+            walletLedgerRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, pixTransfer.getSenderPixKey().getKeyValue());
             throw new FailedToSaveLedgeEntry(transactionId);
@@ -56,7 +56,7 @@ public class LedgerService {
         WalletLedger entryCredit = new WalletLedger().createDepositEntry(transactionId, receiverWalletId, amount);
 
         try {
-            walletLedgeRepository.saveAndFlush(entryCredit);
+            walletLedgerRepository.saveAndFlush(entryCredit);
         } catch (DataIntegrityViolationException e) {
             audit.logFailedCreateLedgerEntries(transactionId, receiverWalletId.toString());
             throw new FailedToSaveLedgeEntry(transactionId);

@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Infra.Schedulers;
 
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
-import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
+import com.matheus.payments.wallet.Domain.Repositories.OutboxRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

@@ -10,7 +10,7 @@ import com.matheus.payments.wallet.Domain.Exceptions.DomainException;
 import com.matheus.payments.wallet.Domain.Exceptions.WalletNotFoundException;
 import com.matheus.payments.wallet.Domain.Models.PixKey;
 import com.matheus.payments.wallet.Domain.Models.TransactionsProcessed;
-import com.matheus.payments.wallet.Infra.Repository.TransactionProcessedRepository;
+import com.matheus.payments.wallet.Domain.Repositories.TransactionProcessedRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.PixKeyFixture;
 import com.matheus.payments.wallet.UnitTests.Fixtures.TransactionDTOFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -112,7 +112,7 @@ public class InstantPaymentTests {
             assertEquals(response.getSenderAccountId(), response.getReceiverAccountId());
 
             // Assert - Verify Operations were called
-            verify(transactionsProcessedRepository, times(1)).saveAndFlush(any()); // ← Agora SEMPRE salva primeiro
+            verify(transactionsProcessedRepository, times(1)).saveAndFlush(any());
         }
 
         @Test

@@ -8,7 +8,7 @@ import com.matheus.payments.wallet.Domain.Exceptions.DepositAlreadyProcessed;
 import com.matheus.payments.wallet.Domain.Exceptions.DomainException;
 import com.matheus.payments.wallet.Domain.Models.DepositsProcessed;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
-import com.matheus.payments.wallet.Infra.Repository.DepositsProcessedRepository;
+import com.matheus.payments.wallet.Domain.Repositories.DepositsProcessedRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;

@@ -1,7 +1,7 @@
 package com.matheus.payments.wallet.Application.Services;
 
 import com.matheus.payments.wallet.Domain.Models.Wallet;
-import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
+import com.matheus.payments.wallet.Domain.Repositories.WalletRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.Services;
 import com.matheus.payments.wallet.Application.Audit.CorrelationId;
 import com.matheus.payments.wallet.Domain.Models.Outbox;
 import com.matheus.payments.wallet.Infra.Exceptions.Custom.ErrorToSaveOutboxException;
-import com.matheus.payments.wallet.Infra.Repository.OutboxRepository;
+import com.matheus.payments.wallet.Domain.Repositories.OutboxRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;

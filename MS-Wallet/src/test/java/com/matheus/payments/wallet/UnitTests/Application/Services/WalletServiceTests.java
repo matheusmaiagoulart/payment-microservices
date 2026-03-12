@@ -2,7 +2,7 @@ package com.matheus.payments.wallet.UnitTests.Application.Services;
 
 import com.matheus.payments.wallet.Application.Services.WalletService;
 import com.matheus.payments.wallet.Domain.Models.Wallet;
-import com.matheus.payments.wallet.Infra.Repository.WalletRepository;
+import com.matheus.payments.wallet.Domain.Repositories.WalletRepository;
 import com.matheus.payments.wallet.UnitTests.Fixtures.WalletFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
