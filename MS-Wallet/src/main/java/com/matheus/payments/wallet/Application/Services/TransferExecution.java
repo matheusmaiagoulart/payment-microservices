@@ -38,7 +38,7 @@ public class TransferExecution {
      * @throws OptimisticLockingFailureException If concurrent update conflict occurs (will be retried)
      */
     @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToExecuteTransfer")
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void transferExecutionWithRetry(PixTransfer pixTransfer) throws DomainException, FailedToSaveLedgeEntry {
         audit.logBalanceValidation(pixTransfer.getTransactionId().toString());
 
@@ -51,13 +51,13 @@ public class TransferExecution {
         senderWallet.debitAccount(pixTransfer.getAmount());
         receiverWallet.creditAccount(pixTransfer.getAmount());
 
-        registryLedgeEntries(pixTransfer);
+        registerLedgerEntries(pixTransfer);
 
         walletService.saveWallet(senderWallet);
         walletService.saveWallet(receiverWallet);
     }
 
-    private void registryLedgeEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
+    private void registerLedgerEntries(PixTransfer pixTransfer) throws FailedToSaveLedgeEntry {
         try {
             ledgerService.registryLedgeEntries(pixTransfer);
         } catch (FailedToSaveLedgeEntry e) {
@@ -74,12 +74,12 @@ public class TransferExecution {
 
         receiverWallet.creditAccount(data.getAmount());
 
-        registryDepositEntryLedge(data);
+        registerDepositLedgerEntries(data);
 
         walletService.saveWallet(receiverWallet);
     }
 
-    private void registryDepositEntryLedge(DepositCreated data) throws FailedToSaveLedgeEntry {
+    private void registerDepositLedgerEntries(DepositCreated data) throws FailedToSaveLedgeEntry {
         try {
             ledgerService.registryDepositEntryLedge(data);
         } catch (FailedToSaveLedgeEntry e) {
