@@ -8,6 +8,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +41,13 @@ public class OutboxService {
     @CircuitBreaker(name = "outboxScheduler", fallbackMethod = "handleErrorToSendOutboxEvent")
     @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToSendOutboxEventRetry")
     public void sendOutboxEvent(Outbox outbox) throws ExecutionException, InterruptedException {
-        publisher.send(outbox.getTopic(), outbox.getPayload());
+        Message<String> message = MessageBuilder
+                .withPayload(outbox.getPayload())
+                .setHeader("correlationId", outbox.getCorrelationId().toString())
+                .setHeader(KafkaHeaders.TOPIC, outbox.getTopic())
+                .build();
+
+        publisher.send(message).get();
         setOutboxSent(outbox);
     }
 
@@ -56,17 +65,17 @@ public class OutboxService {
     // Fallback method for Circuit Breaker
 
     @Transactional(propagation = Propagation.REQUIRED)
-    private void handleErrorToSendOutboxEvent(Outbox outbox, Throwable throwable) {
+    protected void handleErrorToSendOutboxEvent(Outbox outbox, Throwable throwable) {
         setOutboxFailed(outbox, "Circuit breaker opened, the message was not sent. Cause: " + throwable.getCause());
     }
 
-    private void handleErrorToSaveOutboxEvent(UUID userId, String eventType, String topic, String payload, Throwable throwable) {
+    protected void handleErrorToSaveOutboxEvent(UUID userId, String eventType, String topic, String payload, Throwable throwable) {
         log.error("Fallback: Error to save Outbox for userId: {}, eventType: {}. Cause: {}",
                 userId, eventType, throwable.getMessage());
         throw new ErrorToSaveOutboxException();
     }
 
-    private void handleErrorToSendOutboxEventRetry(Outbox outbox, Throwable throwable) {
+    protected void handleErrorToSendOutboxEventRetry(Outbox outbox, Throwable throwable) {
         log.error("Retry fallback: Error to send Outbox id: {}. Cause: {}",
                 outbox.getId(), throwable.getMessage());
         setOutboxFailed(outbox, "Retry failed: " + throwable.getMessage());
