@@ -1,8 +1,8 @@
 package com.matheus.payments.wallet.Application.UseCases;
 
 import com.matheus.payments.wallet.Application.Audit.DepositAudit;
-import com.matheus.payments.wallet.Application.Events.Deposit.DepositExecuted;
-import com.matheus.payments.wallet.Application.Events.Deposit.DepositFailed;
+import com.matheus.payments.wallet.Domain.Events.Deposit.DepositExecuted;
+import com.matheus.payments.wallet.Domain.Events.Deposit.DepositFailed;
 import com.matheus.payments.wallet.Application.Services.TransferExecution;
 import com.matheus.payments.wallet.Domain.Exceptions.DepositAlreadyProcessed;
 import com.matheus.payments.wallet.Domain.Exceptions.DomainException;

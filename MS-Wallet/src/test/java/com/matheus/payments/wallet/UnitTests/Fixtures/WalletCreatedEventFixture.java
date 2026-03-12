@@ -1,6 +1,6 @@
 package com.matheus.payments.wallet.UnitTests.Fixtures;
 
-import com.matheus.payments.wallet.Application.Events.CreateWallet.WalletCreatedEvent;
+import com.matheus.payments.wallet.Domain.Events.CreateWallet.WalletCreatedEvent;
 
 import java.util.UUID;
 

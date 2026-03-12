@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.UnitTests.Application.EventHandlers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Application.EventHandlers.WalletHandlers.WalletCreationFailedEventHandler;
-import com.matheus.payments.wallet.Application.Events.CreateWallet.WalletCreationFailed;
+import com.matheus.payments.wallet.Domain.Events.CreateWallet.WalletCreationFailed;
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.UnitTests.Fixtures.WalletCreationFailedFixture;
 import com.matheus.payments.wallet.utils.KafkaTopics;

@@ -3,7 +3,7 @@ package com.matheus.payments.wallet.Application.EventHandlers.DepositHandlers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.payments.wallet.Application.Audit.CorrelationId;
-import com.matheus.payments.wallet.Application.Events.Deposit.DepositExecuted;
+import com.matheus.payments.wallet.Domain.Events.Deposit.DepositExecuted;
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.utils.ApplicationData;
 import com.matheus.payments.wallet.utils.KafkaTopics;

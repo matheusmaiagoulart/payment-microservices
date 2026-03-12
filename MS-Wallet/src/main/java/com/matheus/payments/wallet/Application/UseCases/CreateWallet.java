@@ -1,8 +1,8 @@
 package com.matheus.payments.wallet.Application.UseCases;
 
 import com.matheus.payments.wallet.Application.Audit.WalletServiceAudit;
-import com.matheus.payments.wallet.Application.Events.CreateWallet.WalletCreatedEvent;
-import com.matheus.payments.wallet.Application.Events.CreateWallet.WalletCreationFailed;
+import com.matheus.payments.wallet.Domain.Events.CreateWallet.WalletCreatedEvent;
+import com.matheus.payments.wallet.Domain.Events.CreateWallet.WalletCreationFailed;
 import com.matheus.payments.wallet.Application.Services.PixKeyService;
 import com.matheus.payments.wallet.Application.Services.WalletService;
 import com.matheus.payments.wallet.Domain.Exceptions.SocialIdAlreadyExistsException;

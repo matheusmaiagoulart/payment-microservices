@@ -2,7 +2,7 @@ package com.matheus.payments.wallet.Application.EventHandlers.WalletHandlers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.matheus.payments.wallet.Application.Events.CreateWallet.WalletCreationFailed;
+import com.matheus.payments.wallet.Domain.Events.CreateWallet.WalletCreationFailed;
 import com.matheus.payments.wallet.Application.Services.OutboxService;
 import com.matheus.payments.wallet.utils.KafkaTopics;
 import lombok.extern.slf4j.Slf4j;

@@ -1,10 +1,9 @@
 package com.matheus.payments.wallet.UnitTests.Application.UseCases;
 import com.matheus.payments.wallet.Application.Audit.DepositAudit;
-import com.matheus.payments.wallet.Application.Events.Deposit.DepositExecuted;
-import com.matheus.payments.wallet.Application.Events.Deposit.DepositFailed;
+import com.matheus.payments.wallet.Domain.Events.Deposit.DepositExecuted;
+import com.matheus.payments.wallet.Domain.Events.Deposit.DepositFailed;
 import com.matheus.payments.wallet.Application.Services.TransferExecution;
 import com.matheus.payments.wallet.Application.UseCases.Deposit;
-import com.matheus.payments.wallet.Domain.Exceptions.DepositAlreadyProcessed;
 import com.matheus.payments.wallet.Domain.Models.DepositsProcessed;
 import com.matheus.payments.wallet.Infra.Kafka.Listeners.DepositCreated.DepositCreated;
 import com.matheus.payments.wallet.Infra.Repository.DepositsProcessedRepository;
