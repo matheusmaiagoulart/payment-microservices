@@ -444,156 +444,30 @@ src/main/java/com/matheus/payments/wallet/
 
 ### Aggregate Root: Wallet
 
-A entidade `Wallet` é o **Aggregate Root** principal, encapsulando toda a lógica de negócio relacionada a operações financeiras:
+A entidade `Wallet` é o **Aggregate Root** principal, encapsulando toda a lógica de negócio relacionada a operações financeiras (Rich Domain Model):
 
-```java
-@Entity
-@Table(name = "wallets")
-public class Wallet {
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `accountId` | UUID | Identificador único (mesmo ID do usuário) |
+| `balance` | BigDecimal | Saldo atual (precisão: 18,2) |
+| `accountType` | Enum | PF (Pessoa Física) ou PJ (Pessoa Jurídica) |
+| `socialId` | String | CPF ou CNPJ |
+| `isActive` | Boolean | Soft delete flag |
+| `version` | Integer | Optimistic Locking |
 
-    @Id
-    private UUID accountId;           // Identificador único (mesmo ID do usuário)
-    
-    @NotNull
-    private BigDecimal balance;       // Saldo atual (precisão: 18,2)
-    
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private accountType accountType;  // PF (Pessoa Física) ou PJ (Pessoa Jurídica)
-    
-    @NotNull
-    private String socialId;          // CPF ou CNPJ
-    
-    private Boolean isActive;         // Soft delete flag
-    private LocalDateTime createdAt;
-    
-    @Version
-    private Integer version;          // Optimistic Locking
-
-    // 🔹 Rich Domain Model - Lógica de negócio encapsulada
-    
-    public void debitAccount(BigDecimal amount) {
-        BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.HALF_UP);
-        
-        if (normalizedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException();
-        }
-        if (!sufficientBalanceValidation(normalizedAmount)) {
-            throw new InsufficientBalanceException();
-        }
-        this.balance = this.balance.subtract(normalizedAmount)
-                                   .setScale(2, RoundingMode.HALF_UP);
-    }
-
-    public void creditAccount(BigDecimal amount) {
-        BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.HALF_UP);
-        
-        if (normalizedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException();
-        }
-        this.balance = this.balance.add(normalizedAmount)
-                                   .setScale(2, RoundingMode.HALF_UP);
-    }
-    
-    private boolean sufficientBalanceValidation(BigDecimal amount) {
-        return this.balance.compareTo(amount) >= 0;
-    }
-}
-```
+**Métodos de domínio:**
+- `debitAccount(amount)` — Debita valor com validação de saldo
+- `creditAccount(amount)` — Credita valor com validação de amount > 0
 
 ### Entidades do Domínio
 
-#### PixKey — Chave PIX
-```java
-@Entity
-@Table(name = "wallet_keys")
-public class PixKey {
-    @Id
-    private UUID id;
-    private String keyValue;    // Valor da chave (CPF, email, telefone, etc.)
-    private keyType type;       // Tipo da chave (CPF, CNPJ, EMAIL, PHONE, RANDOM)
-    private UUID accountId;     // Referência à Wallet
-}
-```
-
-#### WalletLedger — Registro Contábil
-```java
-@Entity
-@Table(name = "wallet_ledger")
-public class WalletLedger {
-    @Id
-    private UUID id;
-    private UUID transactionId;         // ID da transação/depósito
-    private UUID walletId;              // Wallet afetada
-    private UUID counterpartyWalletId;  // Contraparte (ou mesma wallet em depósitos)
-    private BigDecimal amount;
-    
-    @Enumerated(EnumType.STRING)
-    private TransactionType transactionType;  // INSTANT_PAYMENT, DEPOSIT
-    
-    @Enumerated(EnumType.STRING)
-    private WalletEntryType entryType;        // DEBIT, CREDIT
-    
-    private LocalDateTime timestamp;
-    
-    // Factory methods para criação de entradas
-    public WalletLedger createDebitEntry(...) { }
-    public WalletLedger createCreditEntry(...) { }
-    public WalletLedger createDepositEntry(...) { }
-}
-```
-
-#### Outbox — Transactional Outbox
-```java
-@Entity
-@Table(name = "outbox")
-public class Outbox {
-    @Id
-    private UUID id;
-    private UUID userId;
-    private UUID correlationId;       // Rastreamento distribuído
-    private String eventType;         // WalletCreated, DepositExecuted, etc.
-    private String topic;             // Tópico Kafka de destino
-    @Column(columnDefinition = "json")
-    private String payload;           // Evento serializado em JSON
-    private boolean isSent;           // Flag de envio
-    private boolean isFailed;         // Flag de falha
-    private String failureReason;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-}
-```
-
-#### Entidades de Idempotência
-```java
-// Controle de transações PIX já processadas
-@Entity
-@Table(name = "transactions_processed")
-public class TransactionsProcessed {
-    @Id
-    private UUID transactionId;
-    private LocalDateTime processedAt;  // Timestamp para auditoria
-    
-    public TransactionsProcessed(UUID transactionId) {
-        this.transactionId = transactionId;
-        this.processedAt = LocalDateTime.now();
-    }
-}
-
-// Controle de depósitos já processados
-@Entity
-@Table(name = "deposits_processed")
-public class DepositsProcessed {
-    @Id
-    private UUID depositId;
-    private LocalDateTime processedAt;  // Timestamp para auditoria
-    
-    public DepositsProcessed(UUID depositId) {
-        this.depositId = depositId;
-        this.processedAt = LocalDateTime.now();
-    }
-}
-```
+| Entidade | Tabela | Descrição |
+|----------|--------|-----------|
+| `PixKey` | `wallet_keys` | Chave PIX vinculada à wallet (CPF, email, telefone, etc.) |
+| `WalletLedger` | `wallet_ledger` | Registro contábil em partida dobrada (DEBIT/CREDIT) |
+| `Outbox` | `outbox` | Evento pendente de publicação (Transactional Outbox) |
+| `TransactionsProcessed` | `transactions_processed` | Controle de idempotência para PIX |
+| `DepositsProcessed` | `deposits_processed` | Controle de idempotência para depósitos |
 
 ### Exceções de Domínio
 
@@ -618,71 +492,17 @@ Todas as exceções de domínio herdam de `DomainException`, que inclui um `erro
 Implementa a **inversão de dependência** entre a camada de domínio e a infraestrutura de persistência, seguindo o padrão Ports & Adapters (Hexagonal Architecture):
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Domain Layer                              │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │         Repository Interfaces (Ports)                    │    │
-│  │  ┌─────────────────┐  ┌──────────────────┐              │    │
-│  │  │ WalletRepository│  │ OutboxRepository │  ...         │    │
-│  │  │  + findByAccountId │  + findAllBySentFalse          │    │
-│  │  │  + existsBySocialId│  + save                         │    │
-│  │  │  + saveAndFlush    │                                 │    │
-│  │  └─────────────────┘  └──────────────────┘              │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└───────────────────────────────▲──────────────────────────────────┘
-                                │ implements
-┌───────────────────────────────┴──────────────────────────────────┐
-│                   Infrastructure Layer                           │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │           JpaImplements (Adapters)                       │    │
-│  │  ┌───────────────────────┐  ┌─────────────────────────┐ │    │
-│  │  │ WalletRepositoryImpl  │  │ OutboxRepositoryImpl    │ │    │
-│  │  │  - jpaWalletRepository│  │  - jpaOutboxRepository  │ │    │
-│  │  └───────────┬───────────┘  └───────────┬─────────────┘ │    │
-│  └──────────────│──────────────────────────│───────────────┘    │
-│                 │                          │                     │
-│  ┌──────────────▼──────────────────────────▼───────────────┐    │
-│  │           JpaInterfaces (Spring Data JPA)               │    │
-│  │  ┌─────────────────────┐  ┌───────────────────────────┐ │    │
-│  │  │ JpaWalletRepository │  │ JpaOutboxRepository       │ │    │
-│  │  │ extends JpaRepository│  │ extends JpaRepository    │ │    │
-│  │  └─────────────────────┘  └───────────────────────────┘ │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Estrutura:**
-
-```java
-// 1. Port (Domain Layer) - Define o contrato
-public interface WalletRepository {
-    Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId);
-    Boolean existsBySocialId(String socialId);
-    Wallet saveAndFlush(Wallet wallet);
-}
-
-// 2. JPA Interface (Infra Layer) - Spring Data JPA
-@Repository
-public interface JpaWalletRepository extends JpaRepository<Wallet, UUID> {
-    @Lock(LockModeType.OPTIMISTIC)
-    @Query("SELECT w FROM Wallet w WHERE w.accountId = :userId AND w.isActive = true")
-    Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId);
-    
-    Boolean existsBySocialId(String keyValue);
-}
-
-// 3. Adapter (Infra Layer) - Implementação do Port
-@Repository
-public class WalletRepositoryImpl implements WalletRepository {
-    
-    private final JpaWalletRepository jpaWalletRepository;
-    
-    @Override
-    public Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId) {
-        return jpaWalletRepository.findByAccountIdAndIsActiveTrue(userId);
-    }
-    // ...
-}
+Domain Layer                         Infrastructure Layer
+┌─────────────────────┐              ┌─────────────────────────┐
+│ Repository (Port)   │◄─implements──│ RepositoryImpl (Adapter)│
+│  - WalletRepository │              │  - WalletRepositoryImpl │
+│  - OutboxRepository │              │  - OutboxRepositoryImpl │
+└─────────────────────┘              └───────────┬─────────────┘
+                                                 │ usa
+                                     ┌───────────▼─────────────┐
+                                     │ JpaRepository (Spring)  │
+                                     │  - JpaWalletRepository  │
+                                     └─────────────────────────┘
 ```
 
 **Benefícios:**
@@ -725,22 +545,9 @@ Garante **consistência eventual** entre o banco de dados e o Apache Kafka, evit
 
 ### 3. Idempotência via Tabelas de Controle
 
-Previne reprocessamento de mensagens duplicadas do Kafka:
+Previne reprocessamento de mensagens duplicadas do Kafka utilizando tabelas de controle (`TransactionsProcessed` e `DepositsProcessed`).
 
-```java
-// No UseCase de transferência
-private void saveProcessedTransaction(UUID transactionId) {
-    try {
-        transactionsProcessedRepository.saveAndFlush(
-            new TransactionsProcessed(transactionId)
-        );
-    } catch (DataIntegrityViolationException e) {
-        throw new TransactionAlreadyProcessed(); // PK duplicada = já processado
-    }
-}
-```
-
-**Estratégia:** Utiliza a constraint de Primary Key para detectar duplicidade de forma atômica.
+**Estratégia:** Ao receber uma mensagem, tenta salvar o ID na tabela de controle. Se a PK já existir (`DataIntegrityViolationException`), significa que já foi processada → lança exceção de idempotência.
 
 ### 4. Double-Entry Bookkeeping (Partida Dobrada)
 
@@ -771,80 +578,27 @@ Depósito de R$ 50,00 na conta do Bob:
 
 ### 5. Optimistic Locking
 
-Controle de concorrência otimista na entidade `Wallet`:
-
-```java
-// Repository (JpaInterface)
-@Lock(LockModeType.OPTIMISTIC)
-@Query("SELECT w FROM Wallet w WHERE w.accountId = :userId AND w.isActive = true")
-Optional<Wallet> findByAccountIdAndIsActiveTrue(UUID userId);
-
-// Entidade
-@Version
-private Integer version;
-```
-
-**Comportamento:** Em caso de conflito (`OptimisticLockingFailureException`), a operação é retentada automaticamente pelo mecanismo de Retry.
+Controle de concorrência otimista na entidade `Wallet` usando `@Version`. Em caso de conflito (`OptimisticLockingFailureException`), a operação é retentada automaticamente pelo mecanismo de Retry.
 
 ### 6. Rich Domain Model (DDD)
 
-A lógica de negócio está **encapsulada nas entidades**, não nos serviços:
-
-```java
-// ❌ Anemic Model (evitado)
-walletService.debit(wallet, amount);
-
-// ✅ Rich Model (implementado)
-wallet.debitAccount(amount); // Validações dentro da entidade
-```
+A lógica de negócio está **encapsulada nas entidades**, não nos serviços. Exemplo: `wallet.debitAccount(amount)` valida saldo e lança exceção se insuficiente, em vez de ter essa lógica em um serviço externo.
 
 **Elementos DDD implementados:**
 - **Aggregate Root:** `Wallet` é o agregado principal
 - **Entities:** `PixKey`, `WalletLedger`, `Outbox`
-- **Value Objects:** Implícitos em tipos primitivos com validação
 - **Domain Events:** `WalletCreatedEvent`, `DepositExecuted`, etc.
 - **Domain Exceptions:** Exceções tipadas com código de erro
 
 ### 7. Domain Events
 
-Os eventos de domínio representam **fatos que ocorreram** no sistema e estão localizados na camada de Domain:
+Os eventos de domínio representam **fatos que ocorreram** no sistema e estão localizados na camada de Domain (`WalletCreatedEvent`, `WalletCreationFailed`, `DepositExecuted`, `DepositFailed`).
 
-```java
-// Domain/Events/CreateWallet/WalletCreatedEvent.java
-public class WalletCreatedEvent {
-    private final UUID accountId;
-    private final String cpf;
-    // Representa: "Uma wallet foi criada com sucesso"
-}
-
-// Domain/Events/Deposit/DepositFailed.java
-public class DepositFailed {
-    private final UUID depositId;
-    private final boolean alreadyProcessed;
-    private final String failureReason;
-    // Representa: "Um depósito falhou"
-}
-```
-
-**Fluxo:**
-```
-UseCase → publica Domain Event → EventHandler → salva no Outbox → Kafka
-```
+**Fluxo:** `UseCase → publica Domain Event → EventHandler → salva no Outbox → Kafka`
 
 ### 8. Event-Driven Architecture com Spring Events
 
-Desacoplamento interno via eventos da aplicação:
-
-```java
-// Publicação (UseCase)
-internalEventPublisher.publishEvent(new WalletCreatedEvent(accountId, cpf));
-
-// Consumo (EventHandler)
-@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-public void handler(WalletCreatedEvent event) {
-    outboxService.createOutbox(...);
-}
-```
+Desacoplamento interno via `ApplicationEventPublisher` e `@TransactionalEventListener`. Os handlers são executados na fase `BEFORE_COMMIT` para garantir atomicidade com a transação principal.
 
 ---
 
@@ -1012,62 +766,15 @@ resilience4j.retry:
 
 ### Logs Estruturados (JSON)
 
-Configuração via Logback com Logstash Encoder para integração com ELK Stack:
-
-```xml
-<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-    <providers>
-        <timestamp />
-        <logLevel />
-        <message />
-        <arguments />    <!-- Campos customizados via kv() -->
-        <stackTrace />
-    </providers>
-</encoder>
-```
-
-**Exemplo de log:**
-```json
-{
-  "@timestamp": "2026-03-11T10:30:00.000Z",
-  "level": "INFO",
-  "message": "Transfer completed successfully",
-  "applicationName": "MS-Wallet",
-  "correlationId": "abc-123-def",
-  "className": "WalletService",
-  "methodName": "transferProcess",
-  "transactionId": "550e8400-...",
-  "event": "transfer.process.success"
-}
-```
+Logs em formato JSON via Logback + Logstash Encoder para integração com ELK Stack. Cada log inclui: `@timestamp`, `level`, `message`, `applicationName`, `correlationId`, `className`, `methodName` e campos customizados.
 
 ### Correlation ID
 
-Rastreamento distribuído entre serviços via MDC (Mapped Diagnostic Context):
-
-```java
-// Recebimento via Kafka Header
-String correlationId = new String(message.headers().lastHeader("correlationId").value());
-CorrelationId.set(correlationId);  // Armazena no MDC
-
-// Recebimento via HTTP Header
-@RequestHeader("X-Correlation-Id") String correlationId
-
-// Propagação para eventos
-outbox.setCorrelationId(UUID.fromString(CorrelationId.get()));
-
-// Limpeza ao final
-MDC.clear();
-```
+Rastreamento distribuído entre serviços via MDC (Mapped Diagnostic Context). O `correlationId` é recebido via Kafka Header ou HTTP Header (`X-Correlation-Id`) e propagado para todos os eventos publicados.
 
 ### Rotação de Logs
 
-```xml
-<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-    <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
-    <maxHistory>30</maxHistory>  <!-- Retenção de 30 dias -->
-</rollingPolicy>
-```
+Logs diários com retenção de 30 dias configurado via `TimeBasedRollingPolicy`.
 
 ---
 
@@ -1075,7 +782,7 @@ MDC.clear();
 
 ### Schema (Flyway Migrations)
 
-O schema é versionado através de **11 migrations** Flyway:
+O schema é versionado através de **12 migrations** Flyway:
 
 | Versão | Descrição |
 |--------|-----------|
@@ -1090,16 +797,11 @@ O schema é versionado através de **11 migrations** Flyway:
 | V9 | Adição de `transaction_type` em wallet_ledger |
 | V10 | Criação da tabela `deposits_processed` |
 | V11 | Adição de `correlation_id` em outbox |
+| V12 | Adição de `processed_at` nas tabelas de idempotência |
 
 ### Índices Otimizados
 
-```sql
--- wallet_ledger
-CREATE INDEX idx_wallet_ledger_wallet_id ON wallet_ledger (wallet_id);
-CREATE INDEX idx_wallet_ledger_counterparty_id ON wallet_ledger (counterparty_wallet_id);
-CREATE INDEX idx_wallet_ledger_transaction_id ON wallet_ledger (transaction_id);
-CREATE INDEX idx_wallet_ledger_timestamp ON wallet_ledger (timestamp);
-```
+Índices criados para otimizar queries frequentes em `wallet_ledger`: `wallet_id`, `counterparty_wallet_id`, `transaction_id` e `timestamp`.
 
 ---
 
