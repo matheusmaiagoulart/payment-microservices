@@ -50,8 +50,8 @@ public class WalletService {
                 .build();
     }
 
-    @Retry(name = "walletServiceRetry")
     @CircuitBreaker(name = "defaultCircuitBreaker")
+    @Retry(name = "walletServiceRetry")
     public HttpResponse<String> instantPaymentRequest(String jsonPayload) throws IOException, InterruptedException, TimeoutException {
 
         HttpRequest request = HttpRequest.newBuilder()

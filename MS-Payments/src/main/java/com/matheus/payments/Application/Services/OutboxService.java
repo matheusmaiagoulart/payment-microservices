@@ -71,8 +71,8 @@ public class OutboxService {
         }
     }
 
-    @Retry(name = "kafkaRetry")
     @CircuitBreaker(name = "defaultCircuitBreaker", fallbackMethod = "handleErrorToSendOutboxEvent")
+    @Retry(name = "kafkaRetry")
     @Transactional
     public void sendOutboxEntry(TransactionOutbox outbox) throws ExecutionException, InterruptedException {
         Message<String> message = MessageBuilder
