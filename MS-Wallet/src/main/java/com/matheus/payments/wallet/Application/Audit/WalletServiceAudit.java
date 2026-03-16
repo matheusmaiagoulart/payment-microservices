@@ -62,10 +62,12 @@ public class WalletServiceAudit {
 
     // Create Wallet Logs
 
+    private String WALLET_METHOD_NAME = "createWallet";
+
     public void logCreatingWallet(String keyValue) {
         ArrayList<Object> logData = new ArrayList<>();
 
-        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, METHOD_NAME, "Creating wallet for user: " + keyValue));
+        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, WALLET_METHOD_NAME, "Creating wallet for user: " + keyValue));
         logData.addAll(LogBuilder.requestLog("POST", WALLET_ENDPOINT));
         logData.addAll(LogBuilder.eventLog("UserCreated", KafkaTopics.USER_CREATED_EVENT_TOPIC, keyValue));
         logData.add(kv("keyValue", keyValue));
@@ -77,7 +79,7 @@ public class WalletServiceAudit {
     public void logFailedCreateWallet(String keyValue) {
         ArrayList<Object> logData = new ArrayList<>();
 
-        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, METHOD_NAME, "The key value already exists: " + keyValue));
+        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, WALLET_METHOD_NAME, "The key value already exists: " + keyValue));
         logData.addAll(LogBuilder.requestLog("POST", WALLET_ENDPOINT));
         logData.addAll(LogBuilder.eventLog("UserCreated", KafkaTopics.USER_CREATED_EVENT_TOPIC, keyValue));
         logData.add(kv("keyValue", keyValue));
@@ -89,7 +91,7 @@ public class WalletServiceAudit {
     public void logFailedGeneric(String keyValue, String message) {
         ArrayList<Object> logData = new ArrayList<>();
 
-        logData.addAll( LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, METHOD_NAME, message + keyValue));
+        logData.addAll( LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, WALLET_METHOD_NAME, message + keyValue));
         logData.addAll(LogBuilder.requestLog("POST", WALLET_ENDPOINT));
         logData.addAll(LogBuilder.eventLog("UserCreated", KafkaTopics.USER_CREATED_EVENT_TOPIC, keyValue));
         logData.add(kv("keyValue", keyValue));
@@ -101,7 +103,7 @@ public class WalletServiceAudit {
     public void logFailedToProcessMessage(String keyValue, String errorMessage) {
         ArrayList<Object> logData = new ArrayList<>();
 
-        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, METHOD_NAME,
+        logData.addAll(LogBuilder.baseLog(ApplicationData.APPLICATION_NAME, CorrelationId.get(), CLASS_NAME, WALLET_METHOD_NAME,
                 "Failed to process UserCreated event for key:" + keyValue));
         logData.addAll(LogBuilder.eventLog("UserCreated", "UserCreated", keyValue));
         logData.add(kv("event", "user_created.event.processing.failed"));
@@ -109,6 +111,4 @@ public class WalletServiceAudit {
 
         log.error("Failed to process UserCreated event for key: " + keyValue, logData.toArray());
     }
-
-
 }
