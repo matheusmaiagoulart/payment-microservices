@@ -18,7 +18,7 @@ public class UsersController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createUser(@Valid @RequestBody RequestCreateUser request) {
-        var result = createUser.createUser(request);
+        var result = createUser.execute(request);
         return ResponseEntity.ok(result);
     }
 }
