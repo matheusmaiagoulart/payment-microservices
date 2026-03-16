@@ -28,7 +28,6 @@ public class OutboxService {
     public OutboxService(OutboxRepository outboxRepository, KafkaTemplate<String, String> publisher) {
         this.publisher = publisher;
         this.outboxRepository = outboxRepository;
-
     }
     @Retry(name = "databaseRetry", fallbackMethod = "handleErrorToSaveOutboxEvent")
     @Transactional(propagation = Propagation.REQUIRED)
