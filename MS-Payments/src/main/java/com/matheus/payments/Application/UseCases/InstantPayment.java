@@ -24,17 +24,14 @@ public class InstantPayment {
 
     private final ObjectMapper objectMapper;
     private final TransactionIdempotencyService idempotencyService;
-    private final InstantPaymentFacadeAudit audit;
     private final TransactionService transactionService;
     private final PaymentProcessorService paymentProcessorService;
 
     public InstantPayment
             (ObjectMapper objectMapper,
              TransactionIdempotencyService idempotencyService,
-             InstantPaymentFacadeAudit audit,
              TransactionService transactionService,
              PaymentProcessorService paymentProcessorService) {
-        this.audit = audit;
         this.objectMapper = objectMapper;
         this.idempotencyService = idempotencyService;
         this.transactionService = transactionService;
@@ -55,7 +52,6 @@ public class InstantPayment {
         String transactionId = transactionService.createPaymentProcess(request);
         request.setTransactionId(transactionId);
         idempotencyService.createTransactionIdempotencyEntry(transactionId, objectMapper.writeValueAsString(request));
-        audit.logPaymentProcessStarting(transactionId); // LOG
         return transactionId;
     }
 }

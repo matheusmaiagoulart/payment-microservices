@@ -76,18 +76,6 @@ public class PaymentProcessorAudit {
         log.info("Successfully sent payment to Wallet Server", logData.toArray());
     }
 
-    public void logReceiveResponse(String transactionId) {
-        ArrayList<Object> logData = new ArrayList<>();
-
-        logData.addAll(LogBuilder.baseLog(ApplicationData.SERVICE_NAME, CorrelationId.get(), CLASS_NAME, "paymentStatusUpdate", "Payment response received from Wallet Server"));
-        logData.addAll(LogBuilder.requestLog("POST", WALLET_ENDPOINT));
-        logData.add(kv("target_service", WALLET_SERVICE_NAME));
-        logData.add(kv("event", "payment.response.received"));
-        logData.add(kv("transactionId", transactionId));
-
-        log.info("Payment response received from Wallet Server", logData.toArray());
-    }
-
     public void logReceivedSuccessResponse(String transactionId) {
         ArrayList<Object> logData = new ArrayList<>();
 

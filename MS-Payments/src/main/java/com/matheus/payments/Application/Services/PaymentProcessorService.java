@@ -60,8 +60,7 @@ public class PaymentProcessorService {
         String walletResponse = sendToWalletServer(payloadJson);
         try {
             return mapper.readValue(walletResponse, PaymentProcessorResponse.class);
-        }
-        catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             audit.logErrorToParseResponseInformations(transactionId, walletResponse, e.getMessage()); // LOG
             throw new FailedToSentException("An error occurred while processing the response from the payment processor. Please try again later!");
         }
@@ -116,21 +115,18 @@ public class PaymentProcessorService {
     }
 
     private PaymentProcessorResponse handleFailed(PaymentProcessorResponse response, Transaction transaction, TransactionIdempotency idempotency) {
-        audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
         audit.logReceivedFailedResponse(transaction.getTransactionId().toString(), response.getFailedMessage()); // LOG
         handleFailedTransaction(response.getFailedMessage(), transaction, idempotency);
         throw new TransactionFailedException(response.getFailedMessage());
     }
 
     private PaymentProcessorResponse handleSuccess(PaymentProcessorResponse response, Transaction transaction) {
-        audit.logReceiveResponse(response.getTransactionId().toString()); // LOG
         transaction.setTransactionCompleted(response.getSenderAccountId(), response.getReceiverAccountId());
         transactionService.save(transaction);
         return response;
     }
 
     private PaymentProcessorResponse handleAlreadyProcessed(Transaction transaction) {
-        audit.logReceivedSuccessResponse(transaction.getTransactionId().toString());
         return PaymentProcessorResponse.responseAlreadyProcessed(
                 transaction.getTransactionId(),
                 transaction.getSenderAccountId(),
