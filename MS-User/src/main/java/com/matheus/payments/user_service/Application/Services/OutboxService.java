@@ -3,6 +3,7 @@ package com.matheus.payments.user_service.Application.Services;
 import com.matheus.payments.user_service.Application.Audit.CorrelationId;
 import com.matheus.payments.user_service.Application.Audit.OutboxServiceAudit;
 import com.matheus.payments.user_service.Domain.Models.Outbox;
+import com.matheus.payments.user_service.Domain.Repositories.OutboxRepository;
 import com.matheus.payments.user_service.Infra.Exceptions.Custom.ErrorToSaveOutboxException;
 import com.matheus.payments.user_service.Infra.Repository.OutboxRepository;
 import io.github.resilience4j.retry.annotation.Retry;

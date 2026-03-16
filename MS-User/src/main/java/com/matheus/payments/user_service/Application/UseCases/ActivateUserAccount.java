@@ -1,7 +1,7 @@
 package com.matheus.payments.user_service.Application.UseCases;
 
 import com.matheus.payments.user_service.Domain.Models.User;
-import com.matheus.payments.user_service.Infra.Repository.UserRepository;
+import com.matheus.payments.user_service.Domain.Repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

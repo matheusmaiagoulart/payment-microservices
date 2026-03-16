@@ -7,7 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import com.matheus.payments.user_service.Domain.Models.Outbox;
-import com.matheus.payments.user_service.Infra.Repository.OutboxRepository;
+import com.matheus.payments.user_service.Domain.Repositories.OutboxRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

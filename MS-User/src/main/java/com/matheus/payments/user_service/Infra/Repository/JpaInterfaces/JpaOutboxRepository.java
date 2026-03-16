@@ -1,4 +1,4 @@
-package com.matheus.payments.user_service.Infra.Repository;
+package com.matheus.payments.user_service.Infra.Repository.JpaInterfaces;
 
 import com.matheus.payments.user_service.Domain.Models.Outbox;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface OutboxRepository extends JpaRepository<Outbox, UUID> {
+public interface JpaOutboxRepository extends JpaRepository<Outbox, UUID> {
 
     @Query(value = "SELECT TOP 100 * FROM outbox WHERE is_sent = 0", nativeQuery = true)
     List<Outbox> findAllBySentFalse();
