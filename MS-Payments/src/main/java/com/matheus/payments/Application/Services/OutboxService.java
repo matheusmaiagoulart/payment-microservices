@@ -42,7 +42,7 @@ public class OutboxService {
     }
 
     @Retry(name = "databaseRetry")
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRED)
     public void createOutboxEntry(String transactionId, String payload, String topic) {
         audit.logCreateOutbox(transactionId); // LOG
 
