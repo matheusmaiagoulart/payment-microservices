@@ -25,7 +25,7 @@ public class OutboxServiceAudit {
         logData.add(kv("correlationId", CorrelationId.get()));
         logData.add(kv("userId", userId));
 
-        log.error("Creating Outbox Entry", logData.toArray());
+        log.info("Creating Outbox Entry", logData.toArray());
     }
 
     public void logOutboxCreatedSuccessfully() {
@@ -35,7 +35,7 @@ public class OutboxServiceAudit {
         logData.add(kv("event", "outbox.creation.success"));
         logData.add(kv("correlationId", CorrelationId.get()));
 
-        log.error("Outbox created successfully", logData.toArray());
+        log.info("Outbox created successfully", logData.toArray());
     }
 
     public void logErrorCreateOutbox(String errorMessage) {
