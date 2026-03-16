@@ -26,7 +26,7 @@ public class DepositCreatedInternalEventHandler {
         this.outboxService = outboxService;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handler(DepositCreatedEvent event) throws JsonProcessingException {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
