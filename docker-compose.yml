@@ -37,22 +37,21 @@ services:
     container_name: promtail
     volumes:
       - ./promtail-config.yaml:/etc/promtail/promtail.yaml
-      - ./MS-InstantPayment/logs:/app/MS-InstantPayment/logs
+      - ./MS-Payments/logs:/app/MS-Payments/logs
       - ./MS-Wallet/logs:/app/MS-Wallet/logs
       - ./MS-User/logs:/app/MS-User/logs
     command: -config.file=/etc/promtail/promtail.yaml
     networks:
       - loki
 
-
   grafana:
-      image: grafana/grafana:10.3.0
-      container_name: grafana
-      ports:
-        - "3000:3000"
-      depends_on:
-        - loki
-      networks:
+    image: grafana/grafana:10.3.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+    networks:
       - loki
 
 volumes:
