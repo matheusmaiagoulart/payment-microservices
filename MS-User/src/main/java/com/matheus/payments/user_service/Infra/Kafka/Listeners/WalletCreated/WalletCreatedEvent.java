@@ -11,7 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter @Setter
-public class WalletCreatedEventDTO{
+public class WalletCreatedEvent {
 
         private UUID userId;
         private String cpf;
