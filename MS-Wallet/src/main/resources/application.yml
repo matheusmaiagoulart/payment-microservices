@@ -31,4 +31,8 @@ resilience4j.retry:
         - com.matheus.payments.wallet.Domain.Exceptions.DomainException
         - com.matheus.payments.wallet.Domain.Exceptions.DepositAlreadyProcessed
 
+spring:
+  threads:
+    virtual:
+      enabled: true
 

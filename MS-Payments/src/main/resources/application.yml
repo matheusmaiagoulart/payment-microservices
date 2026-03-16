@@ -42,3 +42,7 @@ resilience4j.retry:
         - java.lang.InterruptedException
         - java.util.concurrent.ExecutionException
 
+spring:
+  threads:
+    virtual:
+      enabled: true
