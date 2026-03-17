@@ -66,7 +66,7 @@ O sistema é composto pelos seguintes microserviços:
 | **MS-Payments** | Serviço principal de processamento de pagamentos | [README](MS-Payments/README.md) |
 | **MS-Wallet** | Gerenciamento de carteiras digitais | [README](MS-Wallet/README.md) |
 | **MS-User** | Gerenciamento de usuários | [README](MS-User/README.md) |
-| **Shared** | Biblioteca compartilhada com modelos e utilitários comuns | - |
+| **Shared** | Biblioteca compartilhada com modelos e utilitários comuns | [README](Shared/README.md) |
 
 #### MS-Payments (Processamento de Pagamentos)
 - **CashDeposit**: Processamento de depósitos em dinheiro
