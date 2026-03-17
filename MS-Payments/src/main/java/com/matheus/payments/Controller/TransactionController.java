@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/transaction")
+@RequestMapping("/payments")
 public class TransactionController {
 
 
