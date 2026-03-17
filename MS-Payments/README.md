@@ -53,9 +53,9 @@ Construído seguindo **Clean Architecture** e princípios de **Domain-Driven Des
 
 | Funcionalidade | Descrição | Método |
 |----------------|-----------|--------|
-| **💸 Pagamentos PIX** | Transferências instantâneas entre contas via chaves PIX | `POST /transaction/pix` |
-| **💵 Depósitos** | Registro e processamento de depósitos em espécie | `POST /transaction/deposit` |
-| **📄 Extrato** | Consulta de histórico de transações por conta | `GET /transaction/account-statement` |
+| **💸 Pagamentos PIX** | Transferências instantâneas entre contas via chaves PIX | `POST /payments/pix` |
+| **💵 Depósitos** | Registro e processamento de depósitos em espécie | `POST /payments/deposit` |
+| **📄 Extrato** | Consulta de histórico de transações por conta | `GET /payments/account-statement` |
 | **🔄 Garantia de Entrega** | Outbox Pattern para eventos Kafka | Automático |
 | **🔒 Idempotência** | Prevenção de duplicação de transações | Automático |
 
@@ -83,7 +83,7 @@ Em sistemas bancários distribuídos, desafios críticos precisam ser endereçad
 ┌─────────────┐
 │   Client    │
 └──────┬──────┘
-       │ POST /transaction/pix
+       │ POST /payments/pix
        ▼
 ┌─────────────────────────────────────────────────────┐
 │              MS-Payments                            │
@@ -116,7 +116,7 @@ Em sistemas bancários distribuídos, desafios críticos precisam ser endereçad
 ┌─────────────┐
 │   Client    │
 └──────┬──────┘
-       │ POST /transaction/deposit
+       │ POST /payments/deposit
        ▼
 ┌─────────────────────────────────────────────────────┐
 │              MS-Payments                            │
@@ -322,7 +322,7 @@ UUID único propagado em HTTP headers, logs (MDC) e mensagens Kafka.
 
 ### 1. Pagamento PIX
 
-**Endpoint**: `POST /transaction/pix`
+**Endpoint**: `POST /payments/pix`
 
 Processa pagamento instantâneo entre duas contas via chaves PIX.
 
@@ -356,7 +356,7 @@ Processa pagamento instantâneo entre duas contas via chaves PIX.
 
 ### 2. Depósito em Dinheiro
 
-**Endpoint**: `POST /transaction/deposit`
+**Endpoint**: `POST /payments/deposit`
 
 Registra depósito em espécie para uma conta.
 
@@ -384,7 +384,7 @@ Registra depósito em espécie para uma conta.
 
 ### 3. Extrato de Conta
 
-**Endpoint**: `GET /transaction/account-statement?account={accountId}`
+**Endpoint**: `GET /payments/account-statement?account={accountId}`
 
 Retorna histórico de transações onde a conta foi sender ou receiver.
 
@@ -423,7 +423,7 @@ Retorna histórico de transações onde a conta foi sender ou receiver.
 ### Exemplo 1: Realizar Pagamento PIX
 
 ```bash
-curl -X POST http://localhost:8080/transaction/pix \
+curl -X POST http://localhost:8080/payments/pix \
   -H "Content-Type: application/json" \
   -H "X-Correlation-Id: a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
   -d '{
@@ -451,7 +451,7 @@ curl -X POST http://localhost:8080/transaction/pix \
 ### Exemplo 2: Realizar Depósito
 
 ```bash
-curl -X POST http://localhost:8080/transaction/deposit \
+curl -X POST http://localhost:8080/payments/deposit \
   -H "Content-Type: application/json" \
   -d '{
     "receiverId": "123e4567-e89b-12d3-a456-426614174000",
@@ -472,7 +472,7 @@ curl -X POST http://localhost:8080/transaction/deposit \
 ### Exemplo 3: Consultar Extrato
 
 ```bash
-curl -X GET "http://localhost:8080/transaction/account-statement?account=123e4567-e89b-12d3-a456-426614174000" \
+curl -X GET "http://localhost:8080/payments/account-statement?account=123e4567-e89b-12d3-a456-426614174000" \
   -H "Accept: application/json"
 ```
 
